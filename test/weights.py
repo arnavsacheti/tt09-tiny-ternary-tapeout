@@ -20,8 +20,8 @@ class Weights:
     assert (0 < self.m <= 8)
 
     await RisingEdge(self.dut.clk)
-    self.dut.ui_in.value  = (0xA << 4) + (self.n & 0xF)
-    self.dut.uio_in.value = (self.m & 0x7) << 5
+    self.dut.ui_in.value  = (0xA << 4) + ((self.n-1) & 0xF)
+    self.dut.uio_in.value = ((self.m-1) & 0x7) << 5
 
     for m in range(self.m):
       col: list[int] = [row[m] for row in self.weights]
@@ -55,8 +55,8 @@ class Weights:
   def check_weights(self) -> bool:
     for i in range(self.n):
       for j in range(self.m):
-        w = self.dut.tt_um_t3_inst.load_weights.value[(i*8) + j].signed_integer
-        if self.weights[i][j] != w:
+        w = self.dut.tt_um_t3_inst.load_weights.value[(i*8) + j]
+        if self.weights[i][j] != w.signed_integer:
           self.dut._log.info(f"Load weights value {w} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           return False
         
