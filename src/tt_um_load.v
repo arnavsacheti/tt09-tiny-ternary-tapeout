@@ -45,11 +45,11 @@ module tt_um_load # (
             count <= 0;
             state <= LSB;
             for (int i = 0; i < MAX_IN_LEN; i++) 
-              weights[i][0][1] <= ui_input[i];
+              weights[i][0][1] <= (i < ui_param[6:3]) ? ui_input[i] : 1'bx;
           end else if(ena) begin
             state <= LSB;
             for (int i = 0; i < MAX_IN_LEN; i++)
-              weights[i][count][1] <= ui_input[i];
+              weights[i][count][1] <= (i < ui_param[6:3]) ? ui_input[i] : 1'bx;
             if(count == ui_param[2:0])
               done <= 1'b1;
           end
@@ -60,7 +60,7 @@ module tt_um_load # (
             count <= count + 1;
             state <= MSB;
             for (int i = 0; i < MAX_IN_LEN; i++) 
-              weights[i][count][1] <= ui_input[i];
+              weights[i][count][0] <= (i < ui_param[6:3]) ? ui_input[i] : 1'bx;
           end
         end
       endcase
