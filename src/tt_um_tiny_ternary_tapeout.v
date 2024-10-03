@@ -16,8 +16,10 @@ module tt_um_tiny_ternary_tapeout (
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
 
-  localparam MaxInLen  = 16;
-  localparam MaxOutLen = 8;
+   localparam MaxInLen  = 16;
+   localparam MaxOutLen = 8;
+   localparam BitWidth = 8;
+   
 
   localparam IDLE_TO_LOAD = 'hA;
 
@@ -37,13 +39,24 @@ module tt_um_tiny_ternary_tapeout (
   localparam MULT = 2;
   localparam OUT  = 3;
 
+
   reg [1:0] state;
   
   reg [6:0] cfg_param;
 
-  reg               load_ena;
+
+  // Loading values
+  wire              load_ena;
   wire signed [1:0] load_weights [MaxInLen] [MaxOutLen];
   wire              load_done;
+
+  // Multiplier Values
+  wire 		    mult_ena;
+  wire [BitWidth-1:0] VecIn [1:0];
+   
+  assign VecIn[0] = ui_input[15:8];
+  assign VecIn[1] = ui_input[7:0];
+	   
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -56,20 +69,26 @@ module tt_um_tiny_ternary_tapeout (
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
             state     <= LOAD;
             cfg_param <= ui_input[11:5];
-            load_ena  <= 1'b1;
           end
         end 
         LOAD : begin
           if(load_done) begin
-            state    <= IDLE;
-            load_ena <= 1'b0;
+            state    <= MULT;
           end
         end
+	MULT : begin
+	   if (ui_input == 16'h0000) begin
+	      state  <= IDLE;
+	   end
         default: state <= IDLE;
       endcase
     end
   end
 
+   assign load_ena = state == LOAD;
+   assign mult_ena = state == MULT;
+   
+   
   tt_um_load #(
     .MaxInLen  (MaxInLen),
     .MaxOutLen (MaxOutLen)
@@ -82,5 +101,18 @@ module tt_um_tiny_ternary_tapeout (
     .uo_weights (load_weights),
     .uo_done    (load_done)
   );
+
+  tt_um_mult #(
+	       .InLen(MaxInLen),
+	       .OutLen(MaxOutLen),
+	       .BitWidth(BitWidth)
+  )( tt_um_mult_inst (
+		    .clk(clk),
+		    .rst_n(rst_n),
+		    .en(mult_ena),
+		    .VecIn(VecIn),
+		    .W(load_weights),
+		    .VecOut(uo_out)
+		    );
 
 endmodule : tt_um_tiny_ternary_tapeout
