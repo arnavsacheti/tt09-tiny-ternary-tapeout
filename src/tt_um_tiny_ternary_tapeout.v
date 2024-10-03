@@ -20,6 +20,7 @@ module tt_um_tiny_ternary_tapeout #(
 );
   localparam BitWidth = 8;
   localparam IDLE_TO_LOAD = 'hA;
+  localparam IDLE_TO_MULT = 'hF;
 
 
   // Assign Bi-Directional pin to input
@@ -42,7 +43,7 @@ module tt_um_tiny_ternary_tapeout #(
   
   reg [6:0] cfg_param;
 
-  reg               load_ena;
+  wire              load_ena;
   wire signed [1:0] load_weights [MAX_IN_LEN] [MAX_OUT_LEN];
   wire              load_done;
 
@@ -57,8 +58,7 @@ module tt_um_tiny_ternary_tapeout #(
   always @(posedge clk) begin
     if(!rst_n) begin
       state     <= IDLE;
-      cfg_param <= 7'h7F; 
-      load_ena  <= 1'b0;
+      cfg_param <= 7'h7F;
     end else begin
       case (state)
         IDLE : begin
@@ -66,24 +66,27 @@ module tt_um_tiny_ternary_tapeout #(
             state     <= LOAD;
             cfg_param <= ui_input[11:5];
           end
+          if(ui_input[15:12] == IDLE_TO_MULT) begin
+            state     <= MULT;
+          end
         end 
         LOAD : begin
           if(load_done) begin
             state    <= MULT;
           end
         end
-	MULT : begin
-	   if (ui_input == 16'h0000) begin
-	      state  <= IDLE;
-	   end
-  end
-  default: state <= IDLE;
+        MULT : begin
+          if (ui_input == 16'h0000) begin
+              state  <= IDLE;
+          end
+        end
+        default: state <= IDLE;
       endcase
     end
   end
 
    assign load_ena = state == LOAD;
-   assign mult_ena = state == MULT;
+   assign mult_ena = state == MULT || load_done;
    
    
   tt_um_load #(
@@ -100,8 +103,8 @@ module tt_um_tiny_ternary_tapeout #(
   );
 
   tt_um_mult #(
-	       .InLen(MaxInLen),
-	       .OutLen(MaxOutLen),
+	       .InLen(MAX_IN_LEN),
+	       .OutLen(MAX_OUT_LEN),
 	       .BitWidth(BitWidth)
   ) tt_um_mult_inst (
 		    .clk(clk),

@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = tt_um_tiny_ternary_tapeout.v tt_um_load.v
+PROJECT_SOURCES = tt_um_tiny_ternary_tapeout.v tt_um_load.v tt_um_mult.v
 
 ifneq ($(GATES),yes)
 

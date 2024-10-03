@@ -30,16 +30,16 @@ class Weights:
         lsb = (lsb << 1) + lsb_val 
 
       await RisingEdge(self.dut.clk)
-      self.dut.ui_in.val  = (msb & 0xF0) >> 4
-      self.dut.uio_in.val = (msb & 0XF)
+      self.dut.ui_in.value  = (msb & 0xF0) >> 4
+      self.dut.uio_in.value = (msb & 0XF)
 
       await RisingEdge(self.dut.clk)
-      self.dut.ui_in.val  = (lsb & 0xF0) >> 4
-      self.dut.uio_in.val = (lsb & 0XF)
+      self.dut.ui_in.value  = (lsb & 0xF0) >> 4
+      self.dut.uio_in.value = (lsb & 0XF)
 
-  await RisingEdge(self.dut.clk)
-  self.dut.ui_in.val  = 0
-  self.dut.uio_in.val = 0
+    await RisingEdge(self.dut.clk)
+    self.dut.ui_in.value  = 0
+    self.dut.uio_in.value = 0
       
   async def set_weights(self, weights: list[list[int]]):
     self.weights = weights

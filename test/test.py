@@ -6,14 +6,17 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
 from weights import Weights
+from Vecs import Vecs
+
+import numpy as np
 
 
 @cocotb.test()
 async def test_project(dut) -> None:
     dut._log.info("Start")
 
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    # Set the clock period to 20 ns (50MHz)
+    clock = Clock(dut.clk, 20, units="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -29,15 +32,16 @@ async def test_project(dut) -> None:
 
     # Set the input values you want to test
     weights = Weights(dut)
-    await weights.set_weights([
-        [ 0,  0,  1,  0, 0],
-        [ 0,  1,  0, -1, 0],
-        [ 0,  0, -1,  0, 0]
-    ])
+    values = [-1, 0, 1]
+    w = np.random.choice(values, size=(16, 8)).tolist()
+    await weights.set_weights(w)
 
     # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 5)
+    await ClockCycles(dut.clk, 2) # done should now be high, mult is now running
 
+    vecs = Vecs(dut, w)
+    await vecs.gen_vecs()
+    await ClockCycles(dut.clk, 2)
     # The following assersion is just an example of how to check the output values.
     # Change it to match the actual expected output of your module:
     assert dut.uo_out.value == 0

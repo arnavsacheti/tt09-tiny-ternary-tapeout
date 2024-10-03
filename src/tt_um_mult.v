@@ -5,22 +5,22 @@
  
 
 module tt_um_mult # (
-		    parameter InLen = 16, 
-		    parameter OutLen = 8, 
-		    parameter BitWidth = 8
+   parameter InLen = 16, 
+   parameter OutLen = 8, 
+   parameter BitWidth = 8
 )(
-    input wire			     clk,
-    input wire			     rst_n,
-    input wire			     en,
-    input wire signed [BitWidth-1:0]      VecIn [1:0], 
-    input wire signed [1:0] 		     W [InLen-1:0][OutLen-1:0],
-    output reg signed [BitWidth-1:0] VecOut
+   input wire			     clk,
+   input wire			     rst_n,
+   input wire			     en,
+   input wire signed [BitWidth-1:0]      VecIn [1:0], 
+   input wire signed [1:0] 		     W [InLen][OutLen],
+   output reg signed [BitWidth-1:0] VecOut
 );
 
    reg [3:0]                    row;
    reg                          set;
-   reg signed [BitWidth-1:0]    temp_out[OutLen-1:0];
-   reg signed [BitWidth-1:0]    pipe_out[OutLen-1:0];
+   reg signed [BitWidth-1:0]    temp_out[OutLen];
+   reg signed [BitWidth-1:0]    pipe_out[OutLen];
    integer                      col;
    integer                      i;
 
