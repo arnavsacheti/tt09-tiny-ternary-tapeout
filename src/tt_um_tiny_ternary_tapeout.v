@@ -5,7 +5,10 @@
 
 `default_nettype none
 
-module tt_um_tiny_ternary_tapeout (
+module tt_um_tiny_ternary_tapeout #(
+  parameter MAX_IN_LEN  = 16,
+  parameter MAX_OUT_LEN = 8
+) (
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
     input  wire       ena,      // always 1 when the design is powered, so you can ignore it
@@ -15,12 +18,7 @@ module tt_um_tiny_ternary_tapeout (
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
-
-   localparam MaxInLen  = 16;
-   localparam MaxOutLen = 8;
-   localparam BitWidth = 8;
-   
-
+  localparam BitWidth = 8;
   localparam IDLE_TO_LOAD = 'hA;
 
 
@@ -44,10 +42,8 @@ module tt_um_tiny_ternary_tapeout (
   
   reg [6:0] cfg_param;
 
-
-  // Loading values
-  wire              load_ena;
-  wire signed [1:0] load_weights [MaxInLen] [MaxOutLen];
+  reg               load_ena;
+  wire signed [1:0] load_weights [MAX_IN_LEN] [MAX_OUT_LEN];
   wire              load_done;
 
   // Multiplier Values
@@ -80,7 +76,8 @@ module tt_um_tiny_ternary_tapeout (
 	   if (ui_input == 16'h0000) begin
 	      state  <= IDLE;
 	   end
-        default: state <= IDLE;
+  end
+  default: state <= IDLE;
       endcase
     end
   end
@@ -90,8 +87,8 @@ module tt_um_tiny_ternary_tapeout (
    
    
   tt_um_load #(
-    .MaxInLen  (MaxInLen),
-    .MaxOutLen (MaxOutLen)
+    .MAX_IN_LEN  (MAX_IN_LEN),
+    .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
     .rst_n      (rst_n),
@@ -106,7 +103,7 @@ module tt_um_tiny_ternary_tapeout (
 	       .InLen(MaxInLen),
 	       .OutLen(MaxOutLen),
 	       .BitWidth(BitWidth)
-  )( tt_um_mult_inst (
+  ) tt_um_mult_inst (
 		    .clk(clk),
 		    .rst_n(rst_n),
 		    .en(mult_ena),
