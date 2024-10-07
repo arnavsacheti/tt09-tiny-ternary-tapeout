@@ -17,8 +17,8 @@ class Vecs:
     for run in runs:
       for cycle in range(self.N/2):
         await RisingEdge(self.dut.clk)
-        self.dut.ui_in.value  = self.vecs_in[cycle*2] & 8'hFF
-        self.dut.uio_in.value = self.vecs_in[cycle*2+1] & 8'hFF
+        self.dut.ui_in.value  = self.vecs_in[cycle*2] & 0xFF
+        self.dut.uio_in.value = self.vecs_in[cycle*2+1] & 0xFF
         if (pipeline_out) :
           assert dut.uo_out.value == self.vecs_out[cycle]
       pipeline_out = True

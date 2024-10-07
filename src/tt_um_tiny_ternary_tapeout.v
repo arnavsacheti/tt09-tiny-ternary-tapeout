@@ -38,7 +38,6 @@ module tt_um_tiny_ternary_tapeout #(
   localparam MULT = 2;
   localparam OUT  = 3;
 
-
   reg [1:0] state;
   
   reg [6:0] cfg_param;

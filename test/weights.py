@@ -55,7 +55,7 @@ class Weights:
   def check_weights(self) -> bool:
     for i in range(self.n):
       for j in range(self.m):
-        w = self.dut.tt_um_t3_inst.load_weights.value[(i*8) + j]
+        w = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value[(i*8) + j]
         if self.weights[i][j] != w.signed_integer:
           self.dut._log.info(f"Load weights value {w} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           return False
