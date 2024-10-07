@@ -26,23 +26,24 @@ module tt_um_tiny_ternary_tapeout #(
   assign uio_out = 0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = ena;
-  assign uo_out  = 0;
+  wire _unused  = ena;
 
   wire [15:0] ui_input = {ui_in, uio_in}; 
 
   localparam IDLE = 0;
   localparam LOAD = 1;
-  localparam MULT = 2;
-  localparam OUT  = 3;
+  // localparam MULT = 2;
+  // localparam OUT  = 3;
 
   reg [1:0] state;
   
   reg [6:0] cfg_param;
 
-  reg               load_ena;
-  // wire signed [1:0] load_weights [MAX_IN_LEN] [MAX_OUT_LEN];
-  wire              load_done;
+  reg                                               load_ena;
+  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+  wire                                              load_done;
+
+  assign uo_out = load_weights[7:0];
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -78,8 +79,7 @@ module tt_um_tiny_ternary_tapeout #(
     .ena        (load_ena),
     .ui_input   (ui_input),
     .ui_param   (cfg_param),
-    .uo_weights (),
-    // .uo_weights (load_weights),
+    .uo_weights (load_weights),
     .uo_done    (load_done)
   );
 
