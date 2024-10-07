@@ -6,12 +6,9 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
 from weights import Weights
-<<<<<<< HEAD
 from Vecs import Vecs
 
 import numpy as np
-=======
->>>>>>> origin/asacheti/load
 
 
 @cocotb.test()
