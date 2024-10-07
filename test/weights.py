@@ -35,7 +35,7 @@ class Weights:
         msb |= (msb_val & 0b1) << i
         lsb |= (lsb_val & 0b1) << i
       
-      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      # self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
       self.dut.ui_in.value  = (msb & 0xFF00) >> 8
       self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
@@ -65,8 +65,7 @@ class Weights:
         if (not uo_weight.is_resolvable) or (self.weights[i][j] != uo_weight.signed_integer):
           self.dut._log.info(f"Load weights value {uo_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           check = False
-        
-    self.dut._log.info(self.get_weights())
+          
     return check
   
   

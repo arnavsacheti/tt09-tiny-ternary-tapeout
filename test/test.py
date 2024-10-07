@@ -48,7 +48,6 @@ async def test_project(dut) -> None:
         for j in range(Weights.MAX_OUT_LEN):
             dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
             weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
-            dut._log.info(weight_matrix)
             await weights.set_weights(weight_matrix)
 
             # Wait for one clock cycle to see the output values
