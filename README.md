@@ -39,3 +39,11 @@ The GitHub action will automatically build the ASIC files using [OpenLane](https
   - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
   - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
   - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
+
+## Building GDS locally
+If gds isnt passing it can be run locally in dev container using the following instructions
+
+```sh
+./tt/tt_tool.py --create-user-config --openlane2
+./tt/tt_tool.py --harden --openlane2
+```

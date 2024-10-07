@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
 
+import random
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, RisingEdge
 
 from weights import Weights
 
@@ -28,20 +29,28 @@ async def test_project(dut) -> None:
     dut._log.info("Test project behavior")
 
     # Set the input values you want to test
+    # Known Values test
     weights = Weights(dut)
     await weights.set_weights([
-        [ 0,  0,  1,  0, 0],
-        [ 0,  1,  0, -1, 0],
-        [ 0,  0, -1,  0, 0]
+        [ 1, 0, 1, 0, 1],
+        [ 0, 0, 1, 0, 0],
+        [ 0, 1, 0,-1, 0],
+        [ 0, 0,-1, 0, 0],
+        [-1, 0,-1, 0,-1]
     ])
 
     # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
-
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-
+    await RisingEdge(dut.clk)
     assert weights.check_weights()
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    # Randomize the values and test again
+    for i in range(Weights.MAX_IN_LEN):
+        for j in range(Weights.MAX_OUT_LEN):
+            dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
+            weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
+            dut._log.info(weight_matrix)
+            await weights.set_weights(weight_matrix)
+
+            # Wait for one clock cycle to see the output values
+            await RisingEdge(dut.clk)
+            assert weights.check_weights()
