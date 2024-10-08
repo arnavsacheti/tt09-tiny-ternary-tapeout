@@ -19,6 +19,7 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
   localparam IDLE_TO_LOAD = 'hA;
+  localparam IDLE_TO_OUT  = 'hB;
 
 
   // Assign Bi-Directional pin to input
@@ -33,7 +34,7 @@ module tt_um_tiny_ternary_tapeout #(
   localparam IDLE = 0;
   localparam LOAD = 1;
   // localparam MULT = 2;
-  // localparam OUT  = 3;
+  localparam OUT  = 3;
 
   reg [1:0] state;
   
@@ -43,13 +44,15 @@ module tt_um_tiny_ternary_tapeout #(
   wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
   wire                                              load_done;
 
-  assign uo_out = load_weights[7:0];
+  reg   out_ena;
+  wire  out_done;
 
   always @(posedge clk) begin
     if(!rst_n) begin
       state     <= IDLE;
       cfg_param <= 7'h7F; 
       load_ena  <= 1'b0;
+      out_ena   <= 1'b0;
     end else begin
       case (state)
         IDLE : begin
@@ -58,11 +61,21 @@ module tt_um_tiny_ternary_tapeout #(
             cfg_param <= ui_input[11:5];
             load_ena  <= 1'b1;
           end
+          if(ui_input[15:12] == IDLE_TO_OUT) begin
+            state     <= OUT;
+            out_ena  <= 1'b1;
+          end
         end 
         LOAD : begin
           if(load_done) begin
             state    <= IDLE;
             load_ena <= 1'b0;
+          end
+        end
+        OUT : begin
+          if(out_done) begin
+            state    <= IDLE;
+            out_ena  <= 1'b0;
           end
         end
         default: state <= IDLE;
@@ -81,6 +94,19 @@ module tt_um_tiny_ternary_tapeout #(
     .ui_param   (cfg_param),
     .uo_weights (load_weights),
     .uo_done    (load_done)
+  );
+
+  tt_um_out #(
+    .MAX_IN_LEN  (MAX_IN_LEN),
+    .MAX_OUT_LEN (MAX_OUT_LEN)
+  ) tt_um_out_inst (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .ena        (out_ena),
+    .ui_param   (cfg_param),
+    .ui_weights (load_weights),
+    .uo_output  (uo_out),
+    .uo_done    (out_done)
   );
 
 endmodule : tt_um_tiny_ternary_tapeout

@@ -22,8 +22,7 @@ module tt_um_load # (
 
   localparam MSB = 0;
   localparam LSB = 1;
-
-  reg [1:0]              state;
+  reg        state;
   
   reg                    ena_d;
   reg [MAX_OUT_BITS-1:0] count;
@@ -43,28 +42,29 @@ module tt_um_load # (
     end else begin
       ena_d <= ena;
 
-      case (state)
-        MSB : begin
-          if(ena & !ena_d) begin
-            count <= 0;
+      if(!ena & ena_d) begin
+        // Falling Edge Reset
+        state <= MSB;
+        count <= 0;
+      end
+
+      if(ena) begin
+        case (state)
+          MSB : begin
+              state <= LSB;
+              weights_msb <= ui_input;
+              if(count == ui_param[2:0])
+                done <= 1'b1;
+            end
+          LSB : begin
+              done  <= 1'b0;
+              count <= count + 1;
+              state <= MSB;
+              for (i = 0; i < MAX_IN_LEN; i++) 
+                weights[(i * MAX_OUT_LEN) + {29'h0, count}] <= (ui_param[6:3] >= i[3:0]) ? {weights_msb[i], ui_input[i]} : 2'bxx;
           end
-          if(ena) begin
-            state <= LSB;
-            weights_msb <= ui_input;
-            if(count == ui_param[2:0])
-              done <= 1'b1;
-          end
-        end 
-        LSB : begin
-          if(ena) begin
-            done  <= 1'b0;
-            count <= (done) ? 'h0: count + 1;
-            state <= MSB;
-            for (i = 0; i < MAX_IN_LEN; i++) 
-              weights[(i * MAX_OUT_LEN) + {29'h0, count}] <= (ui_param[6:3] >= i[3:0]) ? {weights_msb[i], ui_input[i]} : 2'bxx;
-          end
-        end
-      endcase
+        endcase
+      end
     end
   end
 

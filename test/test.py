@@ -38,10 +38,7 @@ async def test_project(dut) -> None:
         [ 0, 0,-1, 0, 0],
         [-1, 0,-1, 0,-1]
     ])
-
-    # Wait for one clock cycle to see the output values
-    await RisingEdge(dut.clk)
-    assert weights.check_weights()
+    assert await weights.check_weights()
 
     # Randomize the values and test again
     for i in range(Weights.MAX_IN_LEN):
@@ -49,7 +46,4 @@ async def test_project(dut) -> None:
             dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
             weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
             await weights.set_weights(weight_matrix)
-
-            # Wait for one clock cycle to see the output values
-            await RisingEdge(dut.clk)
-            assert weights.check_weights()
+            assert await weights.check_weights()
