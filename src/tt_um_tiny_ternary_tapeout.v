@@ -28,8 +28,7 @@ module tt_um_tiny_ternary_tapeout #(
   assign uio_out = 0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = ena;
-  assign uo_out  = 0;
+  wire _unused  = ena;
 
   wire [15:0] ui_input = {ui_in, uio_in}; 
 
@@ -45,7 +44,7 @@ module tt_um_tiny_ternary_tapeout #(
   wire              load_ena;
   wire signed [1:0] load_weights [MAX_IN_LEN] [MAX_OUT_LEN];
   wire              load_done;
-
+  assign uo_out = load_weights[7:0];
   // Multiplier Values
   wire 		    mult_ena;
   wire [BitWidth-1:0] VecIn [1:0];

@@ -3,6 +3,9 @@ import cocotb
 from cocotb.triggers import RisingEdge
 
 class Weights:
+  MAX_IN_LEN = 16
+  MAX_OUT_LEN = 8
+
   mapping = {
     1: (0, 1), 
     0: (0, 0), 
@@ -16,12 +19,12 @@ class Weights:
     self.m = len(self.weights[0])
 
   async def drive_weights(self):
-    assert (0 < self.n <= 16)
-    assert (0 < self.m <= 8)
+    assert (0 < self.n <= self.MAX_IN_LEN)
+    assert (0 < self.m <= self.MAX_OUT_LEN)
 
-    await RisingEdge(self.dut.clk)
     self.dut.ui_in.value  = (0xA << 4) + ((self.n-1) & 0xF)
     self.dut.uio_in.value = ((self.m-1) & 0x7) << 5
+    await RisingEdge(self.dut.clk)
 
     for m in range(self.m):
       col: list[int] = [row[m] for row in self.weights]
@@ -34,16 +37,14 @@ class Weights:
         # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
       self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
-
+      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
+      self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
-      self.dut.ui_in.value  = (msb & 0xF0) >> 4
-      self.dut.uio_in.value = (msb & 0XF)
 
+      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
+      self.dut.uio_in.value = (lsb & 0XFF)
       await RisingEdge(self.dut.clk)
-      self.dut.ui_in.value  = (lsb & 0xF0) >> 4
-      self.dut.uio_in.value = (lsb & 0XF)
 
-    await RisingEdge(self.dut.clk)
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
       
@@ -55,20 +56,38 @@ class Weights:
     self.dut._log.info(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)
 
   def check_weights(self) -> bool:
+    # Array packed [High: Low]
+    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
+    check = True
+
     for i in range(self.n):
       # self.dut._log.info(f"checking col {i}")
       for j in range(self.m):
-        # self.dut._log.info(f"checking row {j}")
-        # self.dut._log.info(f"checking idx {(i*self.m) + j}")
-        w = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value[(i*self.m) + j]
-        val = -1 if w == 0b11 else 1 if w == 0b01 else 0
-        # self.dut._log.info(f"value {val} present")
-        # if self.weights[i][j] != w.signed_integer:
-        if int(self.weights[i][j]) != val:
-          self.dut._log.info(f"Load weights value {val} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
-          return False
+        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
+        uo_weight = uo_weights[idx - 1: idx]
+        if (not uo_weight.is_resolvable) or (self.weights[i][j] != uo_weight.signed_integer):
+          self.dut._log.info(f"Load weights value {uo_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
+          check = False
         
-    return True
+    self.dut._log.info(self.get_weights())
+    return check
+  
+  
+  def get_weights(self) -> list[list[int]]:
+    # Array packed [High: Low]
+    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
+    weights = [[0] * self.m for _ in range(self.n)]
+
+    for i in range(self.n):
+      for j in range(self.m):
+        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
+        uo_weight = uo_weights[idx - 1: idx]
+        if not uo_weight.is_resolvable:
+          self.dut._log.warn(f"Load weights value {uo_weight} at ({i}, {j}) not resolvable")
+        else:
+          weights[i][j] = uo_weight.signed_integer
+        
+    return weights
 
   async def __setitem__(self, key, value):
     if isinstance(key, tuple) and isinstance(key[0], slice) and isinstance(key[1], slice):
