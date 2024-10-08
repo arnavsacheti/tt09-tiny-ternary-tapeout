@@ -34,10 +34,11 @@ async def test_project(dut) -> None:
     weights = Weights(dut)
     values = [-1, 0, 1]
     w = np.random.choice(values, size=(16, 8)).tolist()
+    dut._log.info(w)
     await weights.set_weights(w)
-
+    await ClockCycles(dut.clk, 1)
+    assert weights.check_weights()
     # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 2) # done should now be high, mult is now running
 
     vecs = Vecs(dut, w)
     await vecs.gen_vecs()
@@ -45,7 +46,7 @@ async def test_project(dut) -> None:
     # The following assersion is just an example of how to check the output values.
     # Change it to match the actual expected output of your module:
 
-    assert weights.check_weights()
+    
 
     # Keep testing the module by changing the input values, waiting for
     # one or more clock cycles, and asserting the expected output values.

@@ -23,7 +23,7 @@ module tt_um_load # (
   localparam MSB = 0;
   localparam LSB = 1;
 
-  reg [1:0]              state;
+  reg              state;
   
   reg                    ena_d;
   reg [MAX_OUT_BITS-1:0] count;
@@ -50,8 +50,6 @@ module tt_um_load # (
             state <= LSB;
             for (int i = 0; i < MAX_IN_LEN; i++)
               weights[i][count][1] <= (i <= ui_param[6:3]) ? ui_input[i] : 1'bx;
-            if(count == ui_param[2:0])
-              done <= 1'b1;
           end
         end 
         LSB : begin
@@ -61,6 +59,8 @@ module tt_um_load # (
             state <= MSB;
             for (int i = 0; i < MAX_IN_LEN; i++) 
               weights[i][count][0] <= (i <= ui_param[6:3]) ? ui_input[i] : 1'bx;
+            if(count == ui_param[2:0])
+              done <= 1'b1;
           end
         end
       endcase

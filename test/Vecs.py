@@ -20,12 +20,12 @@ class Vecs:
         self.dut.ui_in.value  = self.vecs_in[cycle*2] & 0xFF
         self.dut.uio_in.value = self.vecs_in[cycle*2+1] & 0xFF
         if (pipeline_out) :
-          assert dut.uo_out.value == self.vecs_out[cycle]
+          assert self.dut.uo_out.value == self.vecs_out[cycle]
       pipeline_out = True
       self.gen_vecs()
     for cycle in range(self.M):
       await RisingEdge(self.dut.clk)
-      assert dut.uo_out.value == self.vecs_out[cycle]
+      assert self.dut.uo_out.value == self.vecs_out[cycle]
 
   async def set_weights(self, weights: list[list[int]]):
     self.weights = weights
@@ -41,6 +41,6 @@ class Vecs:
       for col in range(self.M):
         self.vecs_out[col] += self.vecs_in[row] * self.weights[row][col]
         self.vecs_out[col] = max(-128, min(self.vecs_out[col], 127))
-    self.dut._log.info(self.vecs_in)
-    self.dut._log.info(self.weights)
-    self.dut._log.info(self.vecs_out)
+    # self.dut._log.info(self.vecs_in)
+    # self.dut._log.info(self.weights)
+    # self.dut._log.info(self.vecs_out)

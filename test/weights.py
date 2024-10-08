@@ -31,8 +31,9 @@ class Weights:
         msb_val, lsb_val = self.mapping[val]
         msb |= (msb_val & 0b1) << i
         lsb |= (lsb_val & 0b1) << i
+        # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
-      # self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
 
       await RisingEdge(self.dut.clk)
       self.dut.ui_in.value  = (msb & 0xF0) >> 4
@@ -51,13 +52,20 @@ class Weights:
     self.n = len(self.weights)
     self.m = len(self.weights[0])
     await self.drive_weights()
+    self.dut._log.info(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)
 
   def check_weights(self) -> bool:
     for i in range(self.n):
+      # self.dut._log.info(f"checking col {i}")
       for j in range(self.m):
-        w = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value[(i*8) + j]
-        if self.weights[i][j] != w.signed_integer:
-          self.dut._log.info(f"Load weights value {w} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
+        # self.dut._log.info(f"checking row {j}")
+        # self.dut._log.info(f"checking idx {(i*self.m) + j}")
+        w = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value[(i*self.m) + j]
+        val = -1 if w == 0b11 else 1 if w == 0b01 else 0
+        # self.dut._log.info(f"value {val} present")
+        # if self.weights[i][j] != w.signed_integer:
+        if int(self.weights[i][j]) != val:
+          self.dut._log.info(f"Load weights value {val} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           return False
         
     return True
