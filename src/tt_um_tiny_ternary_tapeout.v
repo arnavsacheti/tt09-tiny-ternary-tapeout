@@ -21,6 +21,7 @@ module tt_um_tiny_ternary_tapeout #(
   localparam BitWidth = 8;
   localparam IDLE_TO_LOAD = 'hA;
   localparam IDLE_TO_MULT = 'hF;
+  localparam IDLE_TO_OUT  = 'hB;
 
 
   // Assign Bi-Directional pin to input
@@ -52,6 +53,12 @@ module tt_um_tiny_ternary_tapeout #(
   assign VecIn[0] = ui_input[15:8];
   assign VecIn[1] = ui_input[7:0];
 	   
+  reg                                               load_ena;
+  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+  wire                                              load_done;
+
+  reg   out_ena;
+  wire  out_done;
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -66,6 +73,10 @@ module tt_um_tiny_ternary_tapeout #(
           end else if(ui_input[15:12] == IDLE_TO_MULT) begin
             state     <= MULT;
           end
+          if(ui_input[15:12] == IDLE_TO_OUT) begin
+            state     <= OUT;
+            out_ena  <= 1'b1;
+          end
         end 
         LOAD : begin
           if(load_done) begin
@@ -77,6 +88,12 @@ module tt_um_tiny_ternary_tapeout #(
             state  <= IDLE;
           end else begin
             state  <= MULT;
+          end
+        end
+        OUT : begin
+          if(out_done) begin
+            state    <= IDLE;
+            out_ena  <= 1'b0;
           end
         end
         default: state <= IDLE;
@@ -114,5 +131,17 @@ module tt_um_tiny_ternary_tapeout #(
 		    .VecOut(uo_out),
         .set(mult_set)
 		    );
+  tt_um_out #(
+    .MAX_IN_LEN  (MAX_IN_LEN),
+    .MAX_OUT_LEN (MAX_OUT_LEN)
+  ) tt_um_out_inst (
+    .clk        (clk),
+    .rst_n      (rst_n),
+    .ena        (out_ena),
+    .ui_param   (cfg_param),
+    .ui_weights (load_weights),
+    .uo_output  (uo_out),
+    .uo_done    (out_done)
+  );
 
 endmodule : tt_um_tiny_ternary_tapeout

@@ -51,41 +51,43 @@ class Weights:
     self.m = len(self.weights[0])
     await self.drive_weights()
 
-  def check_weights(self) -> bool:
+  async def check_weights(self) -> bool:
     # Array packed [High: Low]
-    # self.dut._log.info(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)
-    # self.dut._log.info(f"Weights len {len(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)}")
-    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
-    check = True
-
-    for i in range(self.n):
-      # self.dut._log.info(f"checking col {i}")
-      for j in range(self.m):
-        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
-        uo_weight = uo_weights[idx - 1: idx]
-        if (not uo_weight.is_resolvable) or (self.weights[i][j] != uo_weight.signed_integer):
-          self.dut._log.info(f"Load weights value {uo_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
-          check = False
-    # self.dut._log.info(self.get_weights())
+    uo_weights = await self.get_weights()
+    check = self.weights == uo_weights
+    if not check:
+      self.dut._log.info(f"Weights Matrix did not match: [exp: {self.weights}, act: {uo_weights}]")
     return check
   
   
-  def get_weights(self) -> list[list[int]]:
+  async def get_weights(self) -> list[list[int]]:
     # Array packed [High: Low]
-    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
-    weights = [[0] * self.m for _ in range(self.n)]
+    weights = []
 
-    for i in range(self.n):
-      for j in range(self.m):
-        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
-        uo_weight = uo_weights[idx - 1: idx]
-        # self.dut._log.info(f"At idx {idx}, val {uo_weight}")
-        # self.dut._log.info(f"Real idx {i}, {j}, val {self.weights[i][j]}")
-        if not uo_weight.is_resolvable:
-          self.dut._log.warn(f"Load weights value {uo_weight} at ({i}, {j}) not resolvable")
-        else:
-          weights[i][j] = uo_weight.signed_integer
-        
+    self.dut.ui_in.value  = (0xB << 4)
+    self.dut.uio_in.value = 0
+    await RisingEdge(self.dut.clk)
+    self.dut.ui_in.value  = 0
+    self.dut.uio_in.value = 0
+    await RisingEdge(self.dut.clk)
+
+    for n in range(self.n):
+      await RisingEdge(self.dut.clk)
+      msb = self.dut.uo_out.value
+
+      await RisingEdge(self.dut.clk)
+      lsb = self.dut.uo_out.value
+
+      row = []
+      for m in range (self.m):
+        val = (msb[self.MAX_OUT_LEN - m - 1].integer << 1) | lsb[self.MAX_OUT_LEN - m - 1].integer
+        if val >= 2:  # 2 is binary '10', which represents -2 in 2-bit signed int
+          val -= 4
+        row.append(val)
+
+      weights.append(row)
+      # self.dut._log.info(f"Reading [row: {row}, MSB: {msb},  LSB: {lsb}]")
+
     return weights
 
   async def __setitem__(self, key, value):

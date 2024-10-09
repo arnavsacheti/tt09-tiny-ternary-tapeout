@@ -30,7 +30,11 @@ project:
 <<<<<<< HEAD
 =======
     - "tt_um_load.v"
+<<<<<<< HEAD
 >>>>>>> origin/asacheti/load
+=======
+    - "tt_um_out.v"
+>>>>>>> origin/asacheti/out
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
