@@ -36,7 +36,7 @@ class Weights:
         lsb |= (lsb_val & 0b1) << i
         # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
-      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      # self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
       self.dut.ui_in.value  = (msb & 0xFF00) >> 8
       self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
@@ -44,19 +44,17 @@ class Weights:
       self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
       self.dut.uio_in.value = (lsb & 0XFF)
       await RisingEdge(self.dut.clk)
-
-    self.dut.ui_in.value  = 0
-    self.dut.uio_in.value = 0
       
   async def set_weights(self, weights: list[list[int]]):
     self.weights = weights
     self.n = len(self.weights)
     self.m = len(self.weights[0])
     await self.drive_weights()
-    self.dut._log.info(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)
 
   def check_weights(self) -> bool:
     # Array packed [High: Low]
+    # self.dut._log.info(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)
+    # self.dut._log.info(f"Weights len {len(self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value)}")
     uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
     check = True
 
@@ -68,8 +66,7 @@ class Weights:
         if (not uo_weight.is_resolvable) or (self.weights[i][j] != uo_weight.signed_integer):
           self.dut._log.info(f"Load weights value {uo_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           check = False
-        
-    self.dut._log.info(self.get_weights())
+    # self.dut._log.info(self.get_weights())
     return check
   
   
@@ -82,6 +79,8 @@ class Weights:
       for j in range(self.m):
         idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
         uo_weight = uo_weights[idx - 1: idx]
+        # self.dut._log.info(f"At idx {idx}, val {uo_weight}")
+        # self.dut._log.info(f"Real idx {i}, {j}, val {self.weights[i][j]}")
         if not uo_weight.is_resolvable:
           self.dut._log.warn(f"Load weights value {uo_weight} at ({i}, {j}) not resolvable")
         else:

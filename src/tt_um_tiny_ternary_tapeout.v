@@ -42,11 +42,11 @@ module tt_um_tiny_ternary_tapeout #(
   reg [6:0] cfg_param;
 
   wire              load_ena;
-  wire signed [1:0] load_weights [MAX_IN_LEN] [MAX_OUT_LEN];
+  wire signed [1:0] load_weights [MAX_IN_LEN * MAX_OUT_LEN];
   wire              load_done;
-  assign uo_out = load_weights[7:0];
   // Multiplier Values
-  wire 		    mult_ena;
+  wire 		         mult_ena;
+  wire mult_set;
   wire [BitWidth-1:0] VecIn [1:0];
    
   assign VecIn[0] = ui_input[15:8];
@@ -63,8 +63,7 @@ module tt_um_tiny_ternary_tapeout #(
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
             state     <= LOAD;
             cfg_param <= ui_input[11:5];
-          end
-          if(ui_input[15:12] == IDLE_TO_MULT) begin
+          end else if(ui_input[15:12] == IDLE_TO_MULT) begin
             state     <= MULT;
           end
         end 
@@ -75,7 +74,9 @@ module tt_um_tiny_ternary_tapeout #(
         end
         MULT : begin
           if (ui_input == 16'h0000) begin
-              state  <= IDLE;
+            state  <= IDLE;
+          end else begin
+            state  <= MULT;
           end
         end
         default: state <= IDLE;
@@ -84,7 +85,7 @@ module tt_um_tiny_ternary_tapeout #(
   end
 
    assign load_ena = state == LOAD;
-   assign mult_ena = state == MULT || load_done;
+   assign mult_ena = state == MULT || mult_set;
    
    
   tt_um_load #(
@@ -96,7 +97,7 @@ module tt_um_tiny_ternary_tapeout #(
     .ena        (load_ena),
     .ui_input   (ui_input),
     .ui_param   (cfg_param),
-    .uo_weights (load_weights),
+    .weights (load_weights),
     .uo_done    (load_done)
   );
 
@@ -110,7 +111,8 @@ module tt_um_tiny_ternary_tapeout #(
 		    .en(mult_ena),
 		    .VecIn(VecIn),
 		    .W(load_weights),
-		    .VecOut(uo_out)
+		    .VecOut(uo_out),
+        .set(mult_set)
 		    );
 
 endmodule : tt_um_tiny_ternary_tapeout
