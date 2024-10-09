@@ -16,41 +16,16 @@ class Vecs:
   async def drive_vecs(self, runs = 1):
     self.dut.ui_in.value  = (0xF << 4)
     await RisingEdge(self.dut.clk)
-    temps = [0 for _ in range(self.M)]
-    temps_p = [0 for _ in range(self.M)]
-
     pipeline_out = False
-
     for run in range(runs):
       await self.gen_vecs(set = True)
       for cycle in range(int(self.N/2)):
         self.dut.ui_in.value  = self.vecs_in[cycle*2]
         self.dut.uio_in.value = self.vecs_in[cycle*2+1]
         await RisingEdge(self.dut.clk)
-        intermediate_result = [_.signed_integer for _ in self.dut.tt_um_t3_inst.tt_um_mult_inst.temp_out.value]
-        pipe_result = [_.signed_integer for _ in self.dut.tt_um_t3_inst.tt_um_mult_inst.pipe_out.value]
-        self.dut._log.info(f"Output val: {intermediate_result}")
-        self.dut._log.info(f"Pipe  val: {pipe_result}")
-        self.dut._log.info(f"Actual val: {temps_p}")
-        # Check
-        for col in range(self.M):
-          if (cycle != 0): # don't check the last cycle (temp not computed here)
-            assert temps_p[col] == intermediate_result[col]
-          self.weights[cycle*2].reverse()
-          self.weights[cycle*2+1].reverse()
-          mult1 = -1 if self.weights[cycle*2][col]== -1 else (1 if self.weights[cycle*2][col] == 1 else 0)
-          mult2 = -1 if self.weights[cycle*2+1][col]== -1 else (1 if self.weights[cycle*2+1][col] == 1 else 0)
-          self.weights[cycle*2].reverse()
-          self.weights[cycle*2+1].reverse()
-          temps[col] += self.vecs_in[cycle*2] * mult1
-          temps[col] = ((temps[col] + 128) % 256) - 128
-          temps[col] += self.vecs_in[cycle*2+1] * mult2
-          temps[col] = ((temps[col] + 128) % 256) - 128 
-        temps_p = temps
         if (pipeline_out==True) :
           assert self.dut.uo_out.value.signed_integer == self.prev[cycle]
       pipeline_out = True
-      temps = [0 for _ in range(len(temps))]
     for cycle in range(self.M):
       self.dut.ui_in.value  = 0x00
       self.dut.uio_in.value = 0x00

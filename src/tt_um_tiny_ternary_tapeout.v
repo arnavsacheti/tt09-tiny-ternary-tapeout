@@ -31,7 +31,7 @@ module tt_um_tiny_ternary_tapeout #(
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
 
-  wire [15:0] ui_input = {ui_in, uio_in}; 
+  wire [15:0] ui_input = {ui_in, uio_in};
 
   localparam IDLE = 0;
   localparam LOAD = 1;
@@ -43,22 +43,14 @@ module tt_um_tiny_ternary_tapeout #(
   reg [6:0] cfg_param;
 
   wire              load_ena;
-  wire signed [1:0] load_weights [MAX_IN_LEN * MAX_OUT_LEN];
+  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
   wire              load_done;
   // Multiplier Values
   wire 		         mult_ena;
-  wire mult_set;
-  wire [BitWidth-1:0] VecIn [1:0];
-   
-  assign VecIn[0] = ui_input[15:8];
-  assign VecIn[1] = ui_input[7:0];
+  wire             mult_set;
 	   
-  reg                                               load_ena;
-  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                              load_done;
-
-  reg   out_ena;
-  wire  out_done;
+  wire            out_ena;
+  wire            out_done;
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -75,7 +67,6 @@ module tt_um_tiny_ternary_tapeout #(
           end
           if(ui_input[15:12] == IDLE_TO_OUT) begin
             state     <= OUT;
-            out_ena  <= 1'b1;
           end
         end 
         LOAD : begin
@@ -93,7 +84,6 @@ module tt_um_tiny_ternary_tapeout #(
         OUT : begin
           if(out_done) begin
             state    <= IDLE;
-            out_ena  <= 1'b0;
           end
         end
         default: state <= IDLE;
@@ -114,9 +104,12 @@ module tt_um_tiny_ternary_tapeout #(
     .ena        (load_ena),
     .ui_input   (ui_input),
     .ui_param   (cfg_param),
-    .weights (load_weights),
+    .uo_weights (load_weights),
     .uo_done    (load_done)
   );
+
+  wire [BitWidth-1:0] Mult_out;
+  wire [BitWidth-1:0] Done_out;
 
   tt_um_mult #(
 	       .InLen(MAX_IN_LEN),
@@ -126,11 +119,12 @@ module tt_um_tiny_ternary_tapeout #(
 		    .clk(clk),
 		    .rst_n(rst_n),
 		    .en(mult_ena),
-		    .VecIn(VecIn),
+		    .VecIn(ui_input),
 		    .W(load_weights),
-		    .VecOut(uo_out),
+		    .VecOut(Mult_out),
         .set(mult_set)
 		    );
+
   tt_um_out #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
@@ -140,8 +134,10 @@ module tt_um_tiny_ternary_tapeout #(
     .ena        (out_ena),
     .ui_param   (cfg_param),
     .ui_weights (load_weights),
-    .uo_output  (uo_out),
+    .uo_output  (Done_out),
     .uo_done    (out_done)
   );
+
+assign uo_out = mult_set ? Mult_out : (out_done) ? Done_out : {BitWidth{1'b0}};
 
 endmodule : tt_um_tiny_ternary_tapeout
