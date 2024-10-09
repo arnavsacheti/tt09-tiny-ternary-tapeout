@@ -36,7 +36,6 @@ async def test_project(dut) -> None:
     weights = Weights(dut)
     values = [-1, 0, 1]
     w = np.random.choice(values, size=(16, 8)).tolist()
-    # dut._log.info(w)
     await weights.set_weights(w)
     dut.ui_in.value  = 0x00
     dut.uio_in.value = 0x00
@@ -46,10 +45,8 @@ async def test_project(dut) -> None:
 
     vecs = Vecs(dut, w)
     await vecs.drive_vecs(runs=2)
-    # Wait for one clock cycle to see the output values
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
+    await ClockCycles(dut.clk, 10)
 
     
     # await weights.set_weights([
@@ -71,7 +68,9 @@ async def test_project(dut) -> None:
     #         weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
     #         dut._log.info(weight_matrix)
     #         await weights.set_weights(weight_matrix)
-
     #         # Wait for one clock cycle to see the output values
     #         await RisingEdge(dut.clk)
     #         assert weights.check_weights()
+
+    #         vecs = Vecs(dut, weight_matrix)
+    #         await vecs.drive_vecs(runs=4)

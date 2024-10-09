@@ -41,6 +41,7 @@ module tt_um_tiny_ternary_tapeout #(
   reg [1:0] state;
   
   reg [6:0] cfg_param;
+  wire [3:0] multiplies;
 
   wire              load_ena;
   wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
@@ -93,7 +94,7 @@ module tt_um_tiny_ternary_tapeout #(
 
    assign load_ena = state == LOAD;
    assign mult_ena = state == MULT || mult_set;
-   
+   assign multiplies = ui_input[11:8];
    
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
@@ -119,6 +120,8 @@ module tt_um_tiny_ternary_tapeout #(
 		    .clk(clk),
 		    .rst_n(rst_n),
 		    .en(mult_ena),
+        .ui_param(cfg_param),
+        .multiplies(multiplies),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(Mult_out),

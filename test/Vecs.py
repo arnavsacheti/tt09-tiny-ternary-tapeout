@@ -14,7 +14,7 @@ class Vecs:
     self.M = len(self.weights[0])
 
   async def drive_vecs(self, runs = 1):
-    self.dut.ui_in.value  = (0xF << 4)
+    self.dut.ui_in.value  = (0xF << 4) | runs 
     await RisingEdge(self.dut.clk)
     pipeline_out = False
     for run in range(runs):
