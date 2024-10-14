@@ -1,20 +1,11 @@
 # Tiny Tapeout project information
 project:
-<<<<<<< HEAD
-  title:        "T3 (Tiny Ternary Tapeout)"      # Project title
-  author:       "Arnav Sacheti & Jack Adiletta"      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
-  language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
-=======
   title:        "T3 (Tiny Ternary Tapeout)"     # Project title
   author:       "Arnav Sacheti & Jack Adiletta" # Your name
   discord:      ""                              # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "Ternary Matmul Processor"      # One line description of what your project does
   language:     "Verilog"                       # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     50000000                        # Clock frequency in Hz (or 0 if not applicable)
->>>>>>> origin/asacheti/load
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
   tiles: "1x1"                                  # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
@@ -27,14 +18,8 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "tt_um_tiny_ternary_tapeout.v"
-<<<<<<< HEAD
-=======
     - "tt_um_load.v"
-<<<<<<< HEAD
->>>>>>> origin/asacheti/load
-=======
-    - "tt_um_out.v"
->>>>>>> origin/asacheti/out
+    - "tt_um_mult.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:

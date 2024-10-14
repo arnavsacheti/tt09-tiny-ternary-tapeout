@@ -36,22 +36,24 @@ module tt_um_mult # (
          VecOut <= {BitWidth{1'b0}};
       end else if (en) begin
          // Logic for computing the temporary sums (before piping into registers)
-         for (col = 0; col <= ui_param[2:0]; col = col + 1) begin
+         for (col = 0; col < OutLen; col = col + 1) begin
             // If we are not at the end of the loop
             // Update temp_out based on current W values
-            temp_out[col*BitWidth+:BitWidth] <= (W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                                                 W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                                                (W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
-                                                 W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                                                (row == 4'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col*BitWidth)+:BitWidth]));
-            if (row == row_end) begin
-               // load into pipe registers
-               if (col != 0) begin
-                  pipe_out[(BitWidth*(col - 1))+:BitWidth] <= (W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                                                               W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                                                              (W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
-                                                               W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                                                               $signed(temp_out[(col*BitWidth)+:BitWidth]);
+            if (col <= ui_param[2:0]) begin
+               temp_out[col*BitWidth+:BitWidth] <= (W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                                                   W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                   (W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+                                                   W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                   (row == 4'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col*BitWidth)+:BitWidth]));
+               if (row == row_end) begin
+                  // load into pipe registers
+                  if (col != 0) begin
+                     pipe_out[(BitWidth*(col - 1))+:BitWidth] <= (W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                                                                  W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                               (W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+                                                                  W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                                  $signed(temp_out[(col*BitWidth)+:BitWidth]);
+                  end
                end
             end
          end

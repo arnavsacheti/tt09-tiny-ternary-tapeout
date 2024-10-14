@@ -23,9 +23,6 @@ module tt_um_tiny_ternary_tapeout #(
   localparam IDLE_TO_MULT = 'hF;
   localparam IDLE_TO_OUT  = 'hB;
 
-  wire internal_reset;
-
-
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
   assign uio_out = 0;
@@ -33,20 +30,21 @@ module tt_um_tiny_ternary_tapeout #(
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
 
+
   wire [15:0] ui_input = {ui_in, uio_in};
 
   localparam IDLE = 0;
   localparam LOAD = 1;
   localparam MULT = 2;
-  localparam OUT  = 3;
 
+  wire internal_reset;
   reg [1:0] state;
-  
   reg [6:0] cfg_param;
 
   wire              load_ena;
   wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
   wire              load_done;
+
   // Multiplier Values
   wire 		         mult_ena;
   reg              start;
@@ -58,11 +56,13 @@ module tt_um_tiny_ternary_tapeout #(
   always @(posedge clk) begin
     if(!rst_n && !hard_reset) begin
       state     <= IDLE;
+      start     <= 1'b0;
       cfg_param <= cfg_param;
       hard_reset <= 1'b1;
     end else if (!rst_n && hard_reset) begin
       state     <= IDLE;
       cfg_param <= 7'h7F;
+      start     <= 1'b0;
       hard_reset <= 1'b1;
     end else begin
       hard_reset <= 1'b0;
@@ -74,8 +74,6 @@ module tt_um_tiny_ternary_tapeout #(
             start      <= ui_input[0];
           end else if(ui_input[15:12] == IDLE_TO_MULT) begin
             state      <= MULT;
-          end else if(ui_input[15:12] == IDLE_TO_OUT) begin
-            state      <= OUT;
           end else begin
             state      <= IDLE;
           end
@@ -91,11 +89,6 @@ module tt_um_tiny_ternary_tapeout #(
         end
         MULT : begin
           state  <= MULT;
-        end
-        OUT : begin
-          if(out_done) begin
-            state    <= IDLE;
-          end
         end
         default: state <= IDLE;
       endcase
@@ -133,22 +126,7 @@ module tt_um_tiny_ternary_tapeout #(
         .ui_param(cfg_param),
 		    .VecIn(ui_input),
 		    .W(load_weights),
-		    .VecOut(Mult_out)
+		    .VecOut(uo_out)
 		    );
-
-  tt_um_out #(
-    .MAX_IN_LEN  (MAX_IN_LEN),
-    .MAX_OUT_LEN (MAX_OUT_LEN)
-  ) tt_um_out_inst (
-    .clk        (clk),
-    .rst_n      (internal_reset),
-    .ena        (out_ena),
-    .ui_param   (cfg_param),
-    .ui_weights (load_weights),
-    .uo_output  (Done_out),
-    .uo_done    (out_done)
-  );
-
-assign uo_out = state == MULT ? Mult_out : {BitWidth{1'b0}};
 
 endmodule : tt_um_tiny_ternary_tapeout
