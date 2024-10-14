@@ -13,7 +13,6 @@ module tt_um_mult # (
    input wire			     rst_n,
    input wire			     en,
    input wire [6:0]       ui_param,
-   input wire [3:0]       multiplies,
    input wire signed [BitWidth*2-1:0]      VecIn, 
    input wire signed [(2 * InLen * OutLen)-1: 0] W,
    output reg signed [BitWidth-1:0] VecOut,
@@ -21,7 +20,6 @@ module tt_um_mult # (
 );
 
    reg [3:0]                             row;
-   reg [3:0]                             multiplies_t;
    reg signed [BitWidth*OutLen-1:0]      temp_out;
    reg signed [BitWidth*(OutLen-1)-1:0]  pipe_out;
    integer                               col;
@@ -29,11 +27,10 @@ module tt_um_mult # (
 
    wire [3:0] row_end = ui_param[6:3] & 4'b1110;
 
-   always_ff @(posedge clk or negedge rst_n) begin
+   always @(posedge clk or negedge rst_n) begin
       if (!rst_n) begin
          // Reset all state variables
          row <= 4'b0;
-         set <= 1'b0;
          temp_out <= {(BitWidth*OutLen){1'b0}};
          pipe_out <= {BitWidth*(OutLen-1){1'b0}};
          VecOut <= {BitWidth{1'b0}};
@@ -62,31 +59,40 @@ module tt_um_mult # (
          row <= row + 2;
          // If we are at the end of the loop
          if (row == row_end) begin
-               // the output is set now - compute the first vec out
-               multiplies_t <= multiplies_t - 1;
-               if (multiplies_t == 0) begin
-                  set <= 1'b0;
-               end else begin
-                  set <= 1'b1;
-               end
-               VecOut <= (W[row_end * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                          W[row_end * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                         (W[(row_end+1) * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
-                          W[(row_end+1) * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                          temp_out[0+:BitWidth];
-         end else if (set && (row != row_end)) begin
-               // if set then output the value from pipeout
-               VecOut <= pipe_out[row[3:1]*BitWidth+:BitWidth];
-         end else if ((row != row_end) && !set) begin
-               // if not set set Vecout low
-               VecOut <= {BitWidth{1'b0}};
+            // the output is set now - compute the first vec out
+            VecOut <= (W[row_end * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                       W[row_end * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+                      (W[(row_end+1) * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+                       W[(row_end+1) * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+                       temp_out[0+:BitWidth];
+            set <= 1'b1;
+            row <= 4'b0;
+         // if pipelining then output the value from pipe_out
+         end else begin
+            VecOut <= pipe_out[row[3:1]*BitWidth+:BitWidth];
+            set <= 1'b0;
+         // if not pipelining set Vecout low
          end
+         // set <= (row == row_end) && pipe_line;
       end else begin
          // Reset state when enable is low
-         row <= 4'b0;
-         set <= 1'b0;
-         multiplies_t <= multiplies;
-         VecOut <= {BitWidth{1'b0}};
+         if (pipe_line == 1'b1) begin
+            row <= row + 2;
+            if (row != row_end) begin
+               VecOut <= pipe_out[row[3:1]*BitWidth+:BitWidth];
+               set <= 1'b0;
+            end else begin
+               VecOut <= {BitWidth{1'b0}};
+               set <= 1'b0;
+            end
+         end else begin
+            row <= 4'b0;
+            VecOut <= {BitWidth{1'b0}};
+            set <= 1'b0;
+         end
       end
    end
+
+   // assign set = (row == row_end) && pipe_line;
+
 endmodule

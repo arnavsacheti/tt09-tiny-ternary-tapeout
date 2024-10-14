@@ -41,7 +41,6 @@ module tt_um_tiny_ternary_tapeout #(
   reg [1:0] state;
   
   reg [6:0] cfg_param;
-  wire [3:0] multiplies;
 
   wire              load_ena;
   wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
@@ -49,37 +48,60 @@ module tt_um_tiny_ternary_tapeout #(
   // Multiplier Values
   wire 		         mult_ena;
   wire             mult_set;
+  reg [3:0]        multiplies;
+  reg              pipe_out;
 	   
-  wire            out_ena;
-  wire            out_done;
+  wire             out_ena;
+  wire             out_done;
 
   always @(posedge clk) begin
     if(!rst_n) begin
       state     <= IDLE;
       cfg_param <= 7'h7F;
+      multiplies <= 4'b0;
+      pipe_out <= 0;
     end else begin
       case (state)
         IDLE : begin
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
-            state     <= LOAD;
-            cfg_param <= ui_input[11:5];
+            state      <= LOAD;
+            cfg_param  <= ui_input[11:5];
+            multiplies <= ui_input[3:0];
           end else if(ui_input[15:12] == IDLE_TO_MULT) begin
-            state     <= MULT;
-          end
-          if(ui_input[15:12] == IDLE_TO_OUT) begin
-            state     <= OUT;
+            state      <= MULT;
+            multiplies <= ui_input[3:0];
+            pipe_out <= 1'b1;
+          end else if(ui_input[15:12] == IDLE_TO_OUT) begin
+            state      <= OUT;
+          end else begin
+            multiplies <= 4'b0;
+            if (mult_set == 1'b1) begin
+              pipe_out <= 1'b0;
+            end
           end
         end 
         LOAD : begin
-          if(load_done) begin
-            state    <= MULT;
+          if(load_done && multiplies == 4'b0000) begin
+            state <= IDLE;
+            pipe_out <= 1'b0;
+          end else if (load_done) begin
+            state <= MULT;
+            //pipe_out <= 1'b1;
+          end else begin
+            state <= LOAD;
+            pipe_out <= 1'b0;
           end
         end
         MULT : begin
-          if (ui_input == 16'h0000) begin
+          if (multiplies == 4'b0000 && !mult_set) begin
             state  <= IDLE;
+            pipe_out <= 1'b1;
           end else begin
             state  <= MULT;
+            if (mult_set == 1'b1) begin
+              pipe_out <= 1'b1;
+              multiplies <= multiplies-1;
+            end
           end
         end
         OUT : begin
@@ -93,8 +115,7 @@ module tt_um_tiny_ternary_tapeout #(
   end
 
    assign load_ena = state == LOAD;
-   assign mult_ena = state == MULT || mult_set;
-   assign multiplies = ui_input[11:8];
+   assign mult_ena = state == MULT;
    
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
@@ -121,7 +142,7 @@ module tt_um_tiny_ternary_tapeout #(
 		    .rst_n(rst_n),
 		    .en(mult_ena),
         .ui_param(cfg_param),
-        .multiplies(multiplies),
+        .pipe_line(pipe_out),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(Mult_out),
@@ -141,6 +162,6 @@ module tt_um_tiny_ternary_tapeout #(
     .uo_done    (out_done)
   );
 
-assign uo_out = mult_set ? Mult_out : (out_done) ? Done_out : {BitWidth{1'b0}};
+assign uo_out = pipe_out ? Mult_out : {BitWidth{1'b0}};
 
 endmodule : tt_um_tiny_ternary_tapeout

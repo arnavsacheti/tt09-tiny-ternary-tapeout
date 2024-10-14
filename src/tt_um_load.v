@@ -61,7 +61,7 @@ module tt_um_load # (
             count <= (done) ? 'h0: count + 1;
             state <= MSB;
             for (i = 0; i < MAX_IN_LEN; i++) 
-              weights[(i * MAX_OUT_LEN) + {29'h0, count}] <= (ui_param[6:3] >= i[3:0]) ? {weights_msb[i], ui_input[i]} : 2'bxx;
+              weights[(i * MAX_OUT_LEN) + {29'h0, count}] <= (ui_param[6:3] >= i[3:0]) ? {weights_msb[i], ui_input[i]} : 2'b00;
           end
         end
       endcase

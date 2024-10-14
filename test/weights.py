@@ -18,12 +18,12 @@ class Weights:
     self.n = len(self.weights)
     self.m = len(self.weights[0])
 
-  async def drive_weights(self):
+  async def drive_weights(self, runs = 0):
     assert (0 < self.n <= self.MAX_IN_LEN)
     assert (0 < self.m <= self.MAX_OUT_LEN)
 
     self.dut.ui_in.value  = (0xA << 4) + ((self.n-1) & 0xF)
-    self.dut.uio_in.value = ((self.m-1) & 0x7) << 5
+    self.dut.uio_in.value = ((self.m-1) & 0x7) << 5 | (runs & 0xF)
     await RisingEdge(self.dut.clk)
 
     for m in range(self.m):
@@ -45,11 +45,11 @@ class Weights:
       self.dut.uio_in.value = (lsb & 0XFF)
       await RisingEdge(self.dut.clk)
       
-  async def set_weights(self, weights: list[list[int]]):
+  async def set_weights(self, weights: list[list[int]], runs = 0):
     self.weights = weights
     self.n = len(self.weights)
     self.m = len(self.weights[0])
-    await self.drive_weights()
+    await self.drive_weights(runs=runs)
 
   async def check_weights(self) -> bool:
     # Array packed [High: Low]

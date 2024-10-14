@@ -13,18 +13,21 @@ class Vecs:
     self.N = len(self.weights)
     self.M = len(self.weights[0])
 
-  async def drive_vecs(self, runs = 1):
-    self.dut.ui_in.value  = (0xF << 4) | runs 
+  async def drive_vecs(self, runs = 1, enabled = False):
+    if (not enabled):
+      self.dut.uio_in.value = (runs & 0xF) # set the number of runs
+      self.dut.ui_in.value  = (0xF << 4) # set the control word
+
     await RisingEdge(self.dut.clk)
     pipeline_out = False
     for run in range(runs):
       await self.gen_vecs(set = True)
-      for cycle in range(int(self.N/2)):
+      for cycle in range(int(self.N/2)+(self.N%2)):
         self.dut.ui_in.value  = self.vecs_in[cycle*2]
-        self.dut.uio_in.value = self.vecs_in[cycle*2+1]
+        self.dut.uio_in.value = self.vecs_in[cycle*2+1] if (cycle*2+1) < len(self.vecs_in) else 0
         await RisingEdge(self.dut.clk)
         if (pipeline_out==True) :
-          assert self.dut.uo_out.value.signed_integer == self.prev[cycle]
+          assert self.prev[cycle] == self.dut.uo_out.value.signed_integer
       pipeline_out = True
     for cycle in range(self.M):
       self.dut.ui_in.value  = 0x00
@@ -34,11 +37,7 @@ class Vecs:
 
 
   async def gen_vecs(self, set = False):
-    self.prev = []
-    if set:
-      self.prev = [val for val in self.vecs_out]
-    else:
-      prev = [val for val in self.vecs_out]
+    self.prev = [val for val in self.vecs_out]
     self.vecs_in.clear()
     for i in range(self.N): # generate the correct number of input vecs
       self.vecs_in.append(random.randint(-128, 127))
