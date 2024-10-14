@@ -44,7 +44,7 @@ async def test_project(dut) -> None:
 
 
     vecs = Vecs(dut, w)
-    await vecs.drive_vecs(runs=2)
+    await vecs.drive_vecs(runs=2, enabled=False)
 
     await ClockCycles(dut.clk, 10)
 
@@ -62,8 +62,8 @@ async def test_project(dut) -> None:
     assert weights.check_weights()
 
     # Randomize the values and test again
-    for i in range(2): #Weights.MAX_IN_LEN
-        for j in range(2): #Weights.MAX_OUT_LEN
+    for i in range(Weights.MAX_IN_LEN): #Weights.MAX_IN_LEN
+        for j in range(Weights.MAX_OUT_LEN): #Weights.MAX_OUT_LEN
             dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
             weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
             dut._log.info(weight_matrix)
@@ -74,5 +74,4 @@ async def test_project(dut) -> None:
 
             vecs = Vecs(dut, weight_matrix)
             await vecs.drive_vecs(runs=1, enabled=False)
-            await RisingEdge(dut.clk)
 

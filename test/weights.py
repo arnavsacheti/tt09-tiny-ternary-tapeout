@@ -44,6 +44,8 @@ class Weights:
       self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
       self.dut.uio_in.value = (lsb & 0XFF)
       await RisingEdge(self.dut.clk)
+      self.dut.ui_in.value  = 0x00
+      self.dut.uio_in.value = 0x00
       
   async def set_weights(self, weights: list[list[int]], runs = 0):
     self.weights = weights

@@ -23,6 +23,8 @@ module tt_um_tiny_ternary_tapeout #(
   localparam IDLE_TO_MULT = 'hF;
   localparam IDLE_TO_OUT  = 'hB;
 
+  wire internal_reset;
+
 
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
@@ -47,62 +49,48 @@ module tt_um_tiny_ternary_tapeout #(
   wire              load_done;
   // Multiplier Values
   wire 		         mult_ena;
-  wire             mult_set;
-  reg [3:0]        multiplies;
-  reg              pipe_out;
+  reg              start;
+  reg              hard_reset;
 	   
   wire             out_ena;
   wire             out_done;
 
   always @(posedge clk) begin
-    if(!rst_n) begin
+    if(!rst_n && !hard_reset) begin
+      state     <= IDLE;
+      cfg_param <= cfg_param;
+      hard_reset <= 1'b1;
+    end else if (!rst_n && hard_reset) begin
       state     <= IDLE;
       cfg_param <= 7'h7F;
-      multiplies <= 4'b0;
-      pipe_out <= 0;
+      hard_reset <= 1'b1;
     end else begin
+      hard_reset <= 1'b0;
       case (state)
         IDLE : begin
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
             state      <= LOAD;
             cfg_param  <= ui_input[11:5];
-            multiplies <= ui_input[3:0];
+            start      <= ui_input[0];
           end else if(ui_input[15:12] == IDLE_TO_MULT) begin
             state      <= MULT;
-            multiplies <= ui_input[3:0];
-            pipe_out <= 1'b1;
           end else if(ui_input[15:12] == IDLE_TO_OUT) begin
             state      <= OUT;
           end else begin
-            multiplies <= 4'b0;
-            if (mult_set == 1'b1) begin
-              pipe_out <= 1'b0;
-            end
+            state      <= IDLE;
           end
         end 
         LOAD : begin
-          if(load_done && multiplies == 4'b0000) begin
-            state <= IDLE;
-            pipe_out <= 1'b0;
-          end else if (load_done) begin
+          if(load_done && start) begin
             state <= MULT;
-            //pipe_out <= 1'b1;
+          end else if (load_done && !start) begin
+            state <= IDLE;
           end else begin
             state <= LOAD;
-            pipe_out <= 1'b0;
           end
         end
         MULT : begin
-          if (multiplies == 4'b0000 && !mult_set) begin
-            state  <= IDLE;
-            pipe_out <= 1'b1;
-          end else begin
-            state  <= MULT;
-            if (mult_set == 1'b1) begin
-              pipe_out <= 1'b1;
-              multiplies <= multiplies-1;
-            end
-          end
+          state  <= MULT;
         end
         OUT : begin
           if(out_done) begin
@@ -114,15 +102,16 @@ module tt_um_tiny_ternary_tapeout #(
     end
   end
 
-   assign load_ena = state == LOAD;
-   assign mult_ena = state == MULT;
+  assign load_ena = state == LOAD;
+  assign mult_ena = state == MULT;
+  assign internal_reset = !(!rst_n && hard_reset);
    
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
-    .rst_n      (rst_n),
+    .rst_n      (internal_reset),
     .ena        (load_ena),
     .ui_input   (ui_input),
     .ui_param   (cfg_param),
@@ -139,14 +128,12 @@ module tt_um_tiny_ternary_tapeout #(
 	       .BitWidth(BitWidth)
   ) tt_um_mult_inst (
 		    .clk(clk),
-		    .rst_n(rst_n),
+		    .rst_n(internal_reset),
 		    .en(mult_ena),
         .ui_param(cfg_param),
-        .pipe_line(pipe_out),
 		    .VecIn(ui_input),
 		    .W(load_weights),
-		    .VecOut(Mult_out),
-        .set(mult_set)
+		    .VecOut(Mult_out)
 		    );
 
   tt_um_out #(
@@ -154,7 +141,7 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_out_inst (
     .clk        (clk),
-    .rst_n      (rst_n),
+    .rst_n      (internal_reset),
     .ena        (out_ena),
     .ui_param   (cfg_param),
     .ui_weights (load_weights),
@@ -162,6 +149,6 @@ module tt_um_tiny_ternary_tapeout #(
     .uo_done    (out_done)
   );
 
-assign uo_out = pipe_out ? Mult_out : {BitWidth{1'b0}};
+assign uo_out = state == MULT ? Mult_out : {BitWidth{1'b0}};
 
 endmodule : tt_um_tiny_ternary_tapeout

@@ -15,26 +15,25 @@ class Vecs:
 
   async def drive_vecs(self, runs = 1, enabled = False):
     if (not enabled):
-      self.dut.uio_in.value = (runs & 0xF) # set the number of runs
       self.dut.ui_in.value  = (0xF << 4) # set the control word
-
-    await RisingEdge(self.dut.clk)
+      await RisingEdge(self.dut.clk)
     pipeline_out = False
     for run in range(runs):
       await self.gen_vecs(set = True)
       for cycle in range(int(self.N/2)+(self.N%2)):
-        self.dut.ui_in.value  = self.vecs_in[cycle*2]
+        self.dut.ui_in.value  = self.vecs_in[cycle*2] if (cycle*2) < len(self.vecs_in) else 0
         self.dut.uio_in.value = self.vecs_in[cycle*2+1] if (cycle*2+1) < len(self.vecs_in) else 0
         await RisingEdge(self.dut.clk)
         if (pipeline_out==True) :
           assert self.prev[cycle] == self.dut.uo_out.value.signed_integer
-      pipeline_out = True
+      pipeline_out = True 
     for cycle in range(self.M):
       self.dut.ui_in.value  = 0x00
       self.dut.uio_in.value = 0x00
+      self.dut.rst_n.value = 0 if cycle == (self.M - 1) else 1
       await RisingEdge(self.dut.clk)
       assert self.vecs_out[cycle] == self.dut.uo_out.value.signed_integer
-
+      self.dut.rst_n.value = 1
 
   async def gen_vecs(self, set = False):
     self.prev = [val for val in self.vecs_out]
