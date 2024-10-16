@@ -39,36 +39,39 @@ module tt_um_tiny_ternary_tapeout #(
   
   reg [6:0] cfg_param;
 
-  reg                                               load_ena;
-  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                              load_done;
+  wire                                       load_ena;
+  wire [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+  wire                                       load_done;
 
-  assign uo_out = load_weights[7:0];
+  genvar gi;
+
+  for (gi = 0; gi < 8; gi ++) begin
+    assign uo_out[gi] = |load_weights[(gi*32)+31:(gi*32)];
+  end
 
   always @(posedge clk) begin
     if(!rst_n) begin
       state     <= IDLE;
       cfg_param <= 7'h7F; 
-      load_ena  <= 1'b0;
     end else begin
       case (state)
         IDLE : begin
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
             state     <= LOAD;
             cfg_param <= ui_input[11:5];
-            load_ena  <= 1'b1;
           end
         end 
         LOAD : begin
           if(load_done) begin
             state    <= IDLE;
-            load_ena <= 1'b0;
           end
         end
         default: state <= IDLE;
       endcase
     end
   end
+
+  assign load_ena = state == LOAD;
 
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
