@@ -37,15 +37,15 @@ module tt_um_mult # (
          for (col = 0; col < OutLen; col = col + 1) begin
             // If we are not at the end of the loop
             // Update temp_out based on current W values\
-            temp_out[col*BitWidth+:BitWidth] <= (W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+            temp_out[col*BitWidth+:BitWidth] <= (W[(2 * ({28'b0, row} * OutLen + col))+1] == 1'b1 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
                                                  W[(2 * ({28'b0, row} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                                                (W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+                                                (W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+1] == 1'b1 ? (-$signed(VecIn[0+:BitWidth])) :
                                                  W[(2 * (({28'b0, row} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
                                                 (row == 4'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col*BitWidth)+:BitWidth]));
             if (row == row_end) begin
                // load into pipe registers
                if (col != 0) begin
-                  pipe_out[(BitWidth*(col - 1))+:BitWidth] <= (W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                  pipe_out[(BitWidth*(col - 1))+:BitWidth] <= (W[(2 * ({28'b0, row_end} * OutLen + col))+1] == 1'b1 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
                                                                W[(2 * ({28'b0, row_end} * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
                                                               (W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
                                                                W[(2 * (({28'b0, row_end} + 32'b1) * OutLen + col))+: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
@@ -58,9 +58,9 @@ module tt_um_mult # (
          // If we are at the end of the loop
          if (row == row_end) begin
             // the output is set now - compute the first vec out
-            VecOut <= (W[row_end * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+            VecOut <= (W[row_end * OutLen * 2 + 1] == 1'b1 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
                        W[row_end * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                      (W[(row_end+1) * OutLen * 2 +: 2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+                      (W[(row_end+1) * OutLen * 2 + 1] == 1'b1 ? (-$signed(VecIn[0+:BitWidth])) :
                        W[(row_end+1) * OutLen * 2 +: 2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
                        temp_out[0+:BitWidth];
          // if pipelining then output the value from pipe_out

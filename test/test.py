@@ -36,14 +36,23 @@ async def test_project(dut) -> None:
     values = [-1, 0, 1]
     w = np.random.choice(values, size=(16, 8)).tolist()
     await weights.set_weights(w)
+    
+
+
+    vecs = Vecs(dut, w)
+    await vecs.drive_vecs(runs=15, enabled=True)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 1)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    await vecs.drive_vecs(runs=15, enabled=False)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 1)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
     dut.ui_in.value  = 0x00
     dut.uio_in.value = 0x00
     await ClockCycles(dut.clk, 10)
     assert weights.check_weights()
-
-
-    vecs = Vecs(dut, w)
-    await vecs.drive_vecs(runs=15, enabled=False)
-
-    await ClockCycles(dut.clk, 10)
 
