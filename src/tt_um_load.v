@@ -44,6 +44,6 @@ module tt_um_load # (
   end
 
   assign uo_weights = weights;
-  assign uo_done    = count == {ui_param[MAX_OUT_BITS-1:0], WIDTH_BITS{1'b1}};
+  assign uo_done    = count == {ui_param[MAX_OUT_BITS-1:0], {WIDTH_BITS{1'b1}}};
 
 endmodule : tt_um_load
