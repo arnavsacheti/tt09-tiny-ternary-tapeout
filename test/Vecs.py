@@ -25,8 +25,8 @@ class Vecs:
         self.dut.uio_in.value = self.vecs_in[cycle*2+1] if (cycle*2+1) < len(self.vecs_in) else 0
         await RisingEdge(self.dut.clk)
         if (pipeline_out==True) :
-          pass
-          # assert self.prev[cycle] == self.dut.uo_out.value.signed_integer
+          # pass
+          assert self.prev[cycle] == self.dut.uo_out.value.signed_integer
       pipeline_out = True 
     for cycle in range(self.M):
       self.dut.ui_in.value  = 0x00

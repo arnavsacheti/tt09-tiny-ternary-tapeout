@@ -14,7 +14,7 @@ module tt_um_load # (
   input  wire                                              ena,        // always 1 when the module is selected
   input  wire        [MAX_IN_LEN-1:0]                      ui_input,   // Dedicated inputs
   output reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] uo_weights, // Loaded in Weights - finished setting one cycle after done
-  output reg                                              uo_done     // Pulse completed load
+  output wire                                              uo_done     // Pulse completed load
 );
   // localparam MAX_IN_BITS  = $clog2(MAX_IN_LEN);
   
@@ -43,24 +43,17 @@ module tt_um_load # (
 
   always @(posedge clk) begin
     if(!rst_n) begin
-      uo_done <= 1'b0;
       count <= 4'h0;
-    end else if (ena && !uo_done) begin
-      if(count == 4'b1111) begin
-        count <= 4'b0;
-        uo_done <= 1'b1;
-      end else begin
-        count <= count + 1'b1;
-        uo_done <= 1'b0;
-      end
+    end else if (ena) begin
+      count <= count + 1'b1;
       for (i = 0; i < MAX_IN_LEN; i++) begin
         uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}] <=  ui_input[i];
       end
     end else begin
       count <= 4'h0;
-      uo_done <= 1'b0;
     end
   end
 
+assign uo_done = count == 4'b1111;
 
 endmodule : tt_um_load

@@ -80,7 +80,7 @@ module tt_um_tiny_ternary_tapeout #(
     end
   end
 
-  assign mult_ena = state[0] | load_done;
+  assign mult_ena = state[0];// | load_done;
   assign internal_reset = !(!rst_n && hard_reset);
    
   tt_um_load #(
