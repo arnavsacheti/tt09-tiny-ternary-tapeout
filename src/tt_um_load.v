@@ -22,24 +22,18 @@ module tt_um_load # (
   output                                            uo_done     // Pulse completed load
 );
 
+  // integer                                        idx;
   reg [MAX_IN_BITS  + WIDTH_BITS - 1:0]          idx;
   reg [MAX_OUT_BITS + WIDTH_BITS - 1:0]          count;
   reg [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] weights;
   
-
   always @(posedge clk) begin
     if(!rst_n) begin
       count <= 'h0;
-    end else begin
-      count <= ena ? count + 1 : count;
-    end
-  end
-
-  always_latch begin
-    if (ena) begin
-      for(idx = 0; idx < MAX_IN_LEN; idx ++) begin
-        weights[{idx[MAX_IN_BITS-1:0], count}] = ui_input[idx[MAX_IN_BITS-1:0]];
-      end
+    end else if (ena) begin
+      count <= count + 1;
+      for(idx = 0; idx < MAX_IN_LEN; idx ++) 
+        weights[{idx[MAX_IN_BITS-1:0], count}] <= ui_input[idx[MAX_IN_BITS-1:0]];
     end
   end
 

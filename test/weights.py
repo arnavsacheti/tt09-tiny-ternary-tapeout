@@ -36,13 +36,14 @@ class Weights:
         lsb |= (lsb_val & 0b1) << i
       
       self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
+      self.dut.uio_in.value = (lsb & 0XFF)
+      await RisingEdge(self.dut.clk)
+      
       self.dut.ui_in.value  = (msb & 0xFF00) >> 8
       self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
 
-      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
-      self.dut.uio_in.value = (lsb & 0XFF)
-      await RisingEdge(self.dut.clk)
 
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
@@ -55,15 +56,16 @@ class Weights:
 
   def check_weights(self) -> bool:
     # Array packed [High: Low]
-    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
+    load_weights = self.dut.tt_um_t3_inst.load_weights.value
+    print(load_weights)
     check = True
 
     for i in range(self.n):
       for j in range(self.m):
         idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
-        uo_weight = uo_weights[idx - 1: idx]
-        if (not uo_weight.is_resolvable) or (self.weights[i][j] != uo_weight.signed_integer):
-          self.dut._log.info(f"Load weights value {uo_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
+        load_weight = load_weights[idx - 1: idx]
+        if (not load_weight.is_resolvable) or (self.weights[i][j] != load_weight.signed_integer):
+          self.dut._log.info(f"Load weights value {load_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
           check = False
         
     self.dut._log.info(self.get_weights())
@@ -72,17 +74,17 @@ class Weights:
   
   def get_weights(self) -> list[list[int]]:
     # Array packed [High: Low]
-    uo_weights = self.dut.tt_um_t3_inst.tt_um_load_inst.uo_weights.value
+    load_weights = self.dut.tt_um_t3_inst.load_weights.value
     weights = [[0] * self.m for _ in range(self.n)]
 
     for i in range(self.n):
       for j in range(self.m):
         idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
-        uo_weight = uo_weights[idx - 1: idx]
-        if not uo_weight.is_resolvable:
-          self.dut._log.warn(f"Load weights value {uo_weight} at ({i}, {j}) not resolvable")
+        load_weight = load_weights[idx - 1: idx]
+        if not load_weight.is_resolvable:
+          self.dut._log.warn(f"Load weights value {load_weight} at ({i}, {j}) not resolvable")
         else:
-          weights[i][j] = uo_weight.signed_integer
+          weights[i][j] = load_weight.signed_integer
         
     return weights
 
