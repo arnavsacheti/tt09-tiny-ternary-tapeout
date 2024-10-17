@@ -39,29 +39,23 @@ module tt_um_tiny_ternary_tapeout #(
 
   wire internal_reset;
   reg [1:0] state;
-  reg [6:0] cfg_param;
 
   wire              load_ena;
-  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+  reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
   wire              load_done;
 
   // Multiplier Values
   wire 		         mult_ena;
   reg              start;
   reg              hard_reset;
-	   
-  wire             out_ena;
-  wire             out_done;
 
   always @(posedge clk) begin
     if(!rst_n && !hard_reset) begin
       state     <= IDLE;
       start     <= 1'b0;
-      cfg_param <= cfg_param;
       hard_reset <= 1'b1;
     end else if (!rst_n && hard_reset) begin
       state     <= IDLE;
-      cfg_param <= 7'h7F;
       start     <= 1'b0;
       hard_reset <= 1'b1;
     end else begin
@@ -70,7 +64,6 @@ module tt_um_tiny_ternary_tapeout #(
         IDLE : begin
           if(ui_input[15:12] == IDLE_TO_LOAD) begin
             state      <= LOAD;
-            cfg_param  <= ui_input[11:5];
             start      <= ui_input[0];
           end else if(ui_input[15:12] == IDLE_TO_MULT) begin
             state      <= MULT;
@@ -107,7 +100,6 @@ module tt_um_tiny_ternary_tapeout #(
     .rst_n      (internal_reset),
     .ena        (load_ena),
     .ui_input   (ui_input),
-    .ui_param   (cfg_param),
     .uo_weights (load_weights),
     .uo_done    (load_done)
   );
@@ -123,7 +115,6 @@ module tt_um_tiny_ternary_tapeout #(
 		    .clk(clk),
 		    .rst_n(internal_reset),
 		    .en(mult_ena),
-        .ui_param(cfg_param),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)

@@ -28,7 +28,6 @@ async def test_project(dut) -> None:
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
-
     dut._log.info("Test project behavior")
 
     # Set the input values you want to test
@@ -44,47 +43,7 @@ async def test_project(dut) -> None:
 
 
     vecs = Vecs(dut, w)
-    await vecs.drive_vecs(runs=2, enabled=False)
+    await vecs.drive_vecs(runs=15, enabled=False)
 
     await ClockCycles(dut.clk, 10)
-
-    
-    await weights.set_weights([
-        [ 1, 0, 1, 0, 1],
-        [ 0, 0, 1, 0, 0],
-        [ 0, 1, 0,-1, 0],
-        [ 0, 0,-1, 0, 0],
-        [-1, 0,-1, 0,-1]
-    ])
-
-    # Wait for one clock cycle to see the output values
-    await RisingEdge(dut.clk)
-    assert weights.check_weights()
-
-    # Randomize the values and test again
-    for i in range(Weights.MAX_IN_LEN): #Weights.MAX_IN_LEN
-        for j in range(Weights.MAX_OUT_LEN): #Weights.MAX_OUT_LEN
-            dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
-            weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
-            dut._log.info(weight_matrix)
-            await weights.set_weights(weight_matrix)
-            # Wait for one clock cycle to see the output values
-            await RisingEdge(dut.clk)
-            assert weights.check_weights()
-
-            vecs = Vecs(dut, weight_matrix)
-            await vecs.drive_vecs(runs=1, enabled=False)
-
-     # Randomize the values and test again
-    for i in range(Weights.MAX_IN_LEN): #Weights.MAX_IN_LEN
-        for j in range(Weights.MAX_OUT_LEN): #Weights.MAX_OUT_LEN
-            dut._log.info(f"Testing with Random Array of dim: [{i+1}, {j+1}]")
-            weight_matrix = [[random.randint(-1, 1) for _ in range(j+1)] for _ in range (i+1)]
-            dut._log.info(weight_matrix)
-            await weights.set_weights(weight_matrix, start = 1)
-            # Wait for one clock cycle to see the output values
-            vecs = Vecs(dut, weight_matrix)
-            await vecs.drive_vecs(runs=1, enabled=True)
-            assert weights.check_weights()
-
 
