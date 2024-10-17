@@ -23,7 +23,7 @@ module tt_um_load # (
 );
 
   // integer                                        idx;
-  // reg [MAX_IN_BITS  + WIDTH_BITS - 1:0]          idx;
+  reg [MAX_IN_BITS  + WIDTH_BITS - 1:0]          idx;
   reg [MAX_OUT_BITS + WIDTH_BITS - 1:0]          count;
   reg [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] weights;
   
@@ -37,7 +37,8 @@ module tt_um_load # (
 
   always @(ui_input) begin
     if(ena) 
-      weights[{count, {MAX_IN_BITS{1'b1}}} -: MAX_IN_LEN] = ui_input;
+      for (idx = 0; idx < MAX_IN_LEN; idx ++)
+        weights[{idx[MAX_IN_BITS-1:0], count}] <= ui_input[idx[MAX_IN_BITS-1:0]];
   end
 
   assign uo_weights = weights;
