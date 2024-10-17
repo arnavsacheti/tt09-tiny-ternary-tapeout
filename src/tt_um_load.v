@@ -3,55 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-`default_nettype none
+`default_nettype wire
 
 module tt_um_load # (
-  parameter MAX_IN_LEN  = 16, 
-  parameter MAX_OUT_LEN = 8
+  parameter MAX_IN_LEN   = 16, 
+  parameter MAX_OUT_LEN  = 8,
+  parameter WIDTH        = 2,
+  parameter MAX_IN_BITS  = $clog2(MAX_IN_LEN),
+  parameter MAX_OUT_BITS = $clog2(MAX_OUT_LEN),
+  parameter WIDTH_BITS   = $clog2(WIDTH)
 )(
-  input  wire                                              clk,        // clock
-  input  wire                                              rst_n,      // reset_n - low to reset
-  input  wire                                              ena,        // always 1 when the module is selected
-  input  wire        [MAX_IN_LEN-1:0]                      ui_input,   // Dedicated inputs
-  output reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] uo_weights, // Loaded in Weights - finished setting one cycle after done
-  output wire                                              uo_done     // Pulse completed load
+  input                                             clk,        // clock
+  input                                             rst_n,      // reset_n - low to reset
+  input                                             ena,        // always 1 when the module is selected
+  input  [MAX_IN_LEN-1:0]                           ui_input,   // Dedicated inputs
+  output [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] uo_weights, // Loaded in Weights - finished setting one cycle after done
+  output                                            uo_done     // Pulse completed load
 );
-  // localparam MAX_IN_BITS  = $clog2(MAX_IN_LEN);
+
+  // integer                                        idx;
+  reg [MAX_IN_BITS  + WIDTH_BITS - 1:0]          idx;
+  reg [MAX_OUT_BITS + WIDTH_BITS - 1:0]          count;
+  reg [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] weights;
   
-  reg [3:0]   count;
-
-  integer i;
-
-  // // Always latch block to infer latches for `weights`
-  // always @ (*) begin
-  //   if (!rst_n) begin
-  //     for (i = 0; i < MAX_IN_LEN; i++) begin
-  //       uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}] = 'b0;
-  //     end
-  //   end else if (ena && !uo_done) begin
-  //     for (i = 0; i < MAX_IN_LEN; i++) begin
-  //       uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}] = ui_input[i];
-  //     end
-  //   end else begin
-  //     // Retain previous values when `ena` is not active or `rst_n` is not asserted
-  //     for (i = 0; i < MAX_IN_LEN; i++) begin
-  //       uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}] = uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}];
-  //     end
-  //   end
-  // end
-
-
   always @(posedge clk) begin
     if(!rst_n) begin
-      count <= 4'h0;
+      count <= 'h0;
     end else if (ena) begin
-      count <= count + 1'b1;
-      uo_weights[({28'b0, count} << 4)+:MAX_OUT_LEN*2] <=  ui_input;
-    end else begin
-      count <= 4'h0;
+      count <= count + 1;
     end
   end
 
-assign uo_done = count == 4'b1111;
+  always @(ui_input) begin
+    if(ena) 
+      for (idx = 0; idx < MAX_IN_LEN; idx ++)
+        weights[{idx[MAX_IN_BITS-1:0], count}] = ui_input[idx[MAX_IN_BITS-1:0]];
+  end
+
+  assign uo_weights = weights;
+  assign uo_done    = count == {3'b111, {WIDTH_BITS{1'b1}}};
 
 endmodule : tt_um_load

@@ -36,16 +36,18 @@ class Weights:
         lsb |= (lsb_val & 0b1) << i
         # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
-      # self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
+      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
+      self.dut.uio_in.value = (lsb & 0XFF)
+      await RisingEdge(self.dut.clk)
+      
       self.dut.ui_in.value  = (msb & 0xFF00) >> 8
       self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
 
-      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
-      self.dut.uio_in.value = (lsb & 0XFF)
-      await RisingEdge(self.dut.clk)
-      self.dut.ui_in.value  = 0x00
-      self.dut.uio_in.value = 0x00
+
+    self.dut.ui_in.value  = 0
+    self.dut.uio_in.value = 0
       
   async def set_weights(self, weights: list[list[int]], start = 0):
     self.weights = weights
@@ -55,41 +57,36 @@ class Weights:
 
   async def check_weights(self) -> bool:
     # Array packed [High: Low]
-    uo_weights = await self.get_weights()
-    check = self.weights == uo_weights
-    if not check:
-      self.dut._log.info(f"Weights Matrix did not match: [exp: {self.weights}, act: {uo_weights}]")
+    load_weights = self.dut.tt_um_t3_inst.load_weights.value
+    print(load_weights)
+    check = True
+
+    for i in range(self.n):
+      for j in range(self.m):
+        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
+        load_weight = load_weights[idx - 1: idx]
+        if (not load_weight.is_resolvable) or (self.weights[i][j] != load_weight.signed_integer):
+          self.dut._log.info(f"Load weights value {load_weight} at ({i}, {j}) didn't match expected value {self.weights[i][j]}")
+          check = False
+        
+    self.dut._log.info(self.get_weights())
     return check
   
   
   async def get_weights(self) -> list[list[int]]:
     # Array packed [High: Low]
-    weights = []
+    load_weights = self.dut.tt_um_t3_inst.load_weights.value
+    weights = [[0] * self.m for _ in range(self.n)]
 
-    self.dut.ui_in.value  = (0xB << 4)
-    self.dut.uio_in.value = 0
-    await RisingEdge(self.dut.clk)
-    self.dut.ui_in.value  = 0
-    self.dut.uio_in.value = 0
-    await RisingEdge(self.dut.clk)
-
-    for n in range(self.n):
-      await RisingEdge(self.dut.clk)
-      msb = self.dut.uo_out.value
-
-      await RisingEdge(self.dut.clk)
-      lsb = self.dut.uo_out.value
-
-      row = []
-      for m in range (self.m):
-        val = (msb[self.MAX_OUT_LEN - m - 1].integer << 1) | lsb[self.MAX_OUT_LEN - m - 1].integer
-        if val >= 2:  # 2 is binary '10', which represents -2 in 2-bit signed int
-          val -= 4
-        row.append(val)
-
-      weights.append(row)
-      # self.dut._log.info(f"Reading [row: {row}, MSB: {msb},  LSB: {lsb}]")
-
+    for i in range(self.n):
+      for j in range(self.m):
+        idx = (2 * ((self.MAX_IN_LEN * self.MAX_OUT_LEN) - ((i*self.MAX_OUT_LEN) + j))) - 1
+        load_weight = load_weights[idx - 1: idx]
+        if not load_weight.is_resolvable:
+          self.dut._log.warn(f"Load weights value {load_weight} at ({i}, {j}) not resolvable")
+        else:
+          weights[i][j] = load_weight.signed_integer
+        
     return weights
 
   async def __setitem__(self, key, value):

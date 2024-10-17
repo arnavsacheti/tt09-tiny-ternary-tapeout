@@ -55,4 +55,3 @@ async def test_project(dut) -> None:
     dut.uio_in.value = 0x00
     await ClockCycles(dut.clk, 10)
     assert weights.check_weights()
-
