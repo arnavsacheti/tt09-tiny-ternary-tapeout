@@ -23,6 +23,7 @@ class Weights:
     assert (0 < self.m <= self.MAX_OUT_LEN)
 
     self.dut.ui_in.value  = (0xA << 4) + ((self.n-1) & 0xF)
+    self.dut.uio_in.value = ((self.m-1) & 0x7) << 5 | start & 0x01
     await RisingEdge(self.dut.clk)
 
     for m in range(self.m):
@@ -36,14 +37,12 @@ class Weights:
         # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
       # self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
-
+      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
+      self.dut.uio_in.value = (msb & 0XFF)
+      await RisingEdge(self.dut.clk)
 
       self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
       self.dut.uio_in.value = (lsb & 0XFF)
-      await RisingEdge(self.dut.clk)
-
-      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
-      self.dut.uio_in.value = (msb & 0XFF)
       await RisingEdge(self.dut.clk)
       self.dut.ui_in.value  = 0x00
       self.dut.uio_in.value = 0x00

@@ -31,11 +31,16 @@ class Vecs:
     for cycle in range(self.M):
       self.dut.ui_in.value  = 0x00
       self.dut.uio_in.value = 0x00
-      self.dut.rst_n.value = 0 if cycle == (self.M - 1) else 1
       await RisingEdge(self.dut.clk)
       if (cycle!=0):
         assert self.vecs_out[cycle-1] == self.dut.uo_out.value.signed_integer
       self.dut.rst_n.value = 1
+    self.dut.rst_n.value = 0
+    await RisingEdge(self.dut.clk)
+    self.dut.rst_n.value = 1
+
+
+
 
   async def gen_vecs(self, set = False):
     self.prev = [val for val in self.vecs_out]

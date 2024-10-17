@@ -46,9 +46,7 @@ module tt_um_load # (
       count <= 4'h0;
     end else if (ena) begin
       count <= count + 1'b1;
-      for (i = 0; i < MAX_IN_LEN; i++) begin
-        uo_weights[(i * MAX_OUT_LEN * 2) + {{28'b0},count}] <=  ui_input[i];
-      end
+      uo_weights[({28'b0, count} << 4)+:MAX_OUT_LEN*2] <=  ui_input;
     end else begin
       count <= 4'h0;
     end

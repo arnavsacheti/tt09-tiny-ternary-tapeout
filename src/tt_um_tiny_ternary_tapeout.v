@@ -36,25 +36,16 @@ module tt_um_tiny_ternary_tapeout #(
   localparam LOAD = 2;
   localparam MULT = 1;
 
-  wire internal_reset;
+  // wire internal_reset;
   reg [1:0] state;
 
   reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
   wire              load_done;
 
-  // Multiplier Values
-  wire 		         mult_ena;
-  reg              hard_reset;
-
   always @(posedge clk) begin
-    if(!rst_n && !hard_reset) begin
+    if(!rst_n) begin
       state     <= IDLE;
-      hard_reset <= 1'b1;
-    end else if (!rst_n && hard_reset) begin
-      state     <= IDLE;
-      hard_reset <= 1'b1;
     end else begin
-      hard_reset <= 1'b0;
       case (state)
         IDLE : begin
           if(ui_input[13:12] == IDLE_TO_LOAD) begin
@@ -79,16 +70,13 @@ module tt_um_tiny_ternary_tapeout #(
       endcase
     end
   end
-
-  assign mult_ena = state[0];// | load_done;
-  assign internal_reset = !(!rst_n && hard_reset);
    
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
-    .rst_n      (internal_reset),
+    .rst_n      (rst_n),
     .ena        (state[1]),
     .ui_input   (ui_input),
     .uo_weights (load_weights),
@@ -101,8 +89,8 @@ module tt_um_tiny_ternary_tapeout #(
 	       .BitWidth(BitWidth)
   ) tt_um_mult_inst (
 		    .clk(clk),
-		    .rst_n(internal_reset),
-		    .en(mult_ena),
+		    .rst_n(rst_n),
+		    .en( state[0]),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)
