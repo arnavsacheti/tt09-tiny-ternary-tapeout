@@ -3,7 +3,7 @@ TOOL = ./tt/tt_tool.py
 
 INFO_DIR = gds
 
-all: gds info
+all: clean gds info
 
 debug: 
 	$(TOOL) --debug --create-user-config $(FLOW)
@@ -14,7 +14,7 @@ gds:
 	$(TOOL) --harden $(FLOW)
 
 info:
-	mkdir $(INFO_DIR)
+	mkdir -p $(INFO_DIR)
 	$(TOOL) --print-stats $(FLOW) > $(INFO_DIR)/stats.txt
 	$(TOOL) --print-cell-summary $(FLOW) > $(INFO_DIR)/cell-summary.txt
 	$(TOOL) --print-cell-category $(FLOW) > $(INFO_DIR)/cell-category.txt
