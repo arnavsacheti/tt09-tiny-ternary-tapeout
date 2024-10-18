@@ -38,9 +38,10 @@ module tt_um_tiny_ternary_tapeout #(
 
   // wire internal_reset;
   reg [1:0] state;
+  reg [3:0] count;
 
   reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire              load_done;
+  wire                                      load_done;
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -70,12 +71,21 @@ module tt_um_tiny_ternary_tapeout #(
       endcase
     end
   end
+
+  always @(posedge clk) begin
+    if(!rst_n) begin
+      count <= 'h0;
+    end else if (state!=2'b00) begin
+      count <= count + 1;
+    end
+  end
    
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
+    .count      (count),
     .rst_n      (rst_n),
     .ena        (state[1]),
     .ui_input   (ui_input),
@@ -89,6 +99,7 @@ module tt_um_tiny_ternary_tapeout #(
 	       .BitWidth(BitWidth)
   ) tt_um_mult_inst (
 		    .clk(clk),
+        .row(count[2:0]),
 		    .rst_n(rst_n),
 		    .en( state[0]),
 		    .VecIn(ui_input),

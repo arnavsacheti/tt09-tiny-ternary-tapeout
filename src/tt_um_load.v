@@ -14,6 +14,7 @@ module tt_um_load # (
   parameter WIDTH_BITS   = $clog2(WIDTH)
 )(
   input                                             clk,        // clock
+  input [MAX_OUT_BITS + WIDTH_BITS - 1:0]           count,
   input                                             rst_n,      // reset_n - low to reset
   input                                             ena,        // always 1 when the module is selected
   input  [MAX_IN_LEN-1:0]                           ui_input,   // Dedicated inputs
@@ -23,16 +24,7 @@ module tt_um_load # (
 
   // integer                                        idx;
   reg [MAX_IN_BITS  + WIDTH_BITS - 1:0]          idx;
-  reg [MAX_OUT_BITS + WIDTH_BITS - 1:0]          count;
   reg [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] weights;
-  
-  always @(posedge clk) begin
-    if(!rst_n) begin
-      count <= 'h0;
-    end else if (ena) begin
-      count <= count + 1;
-    end
-  end
 
   always @(ui_input) begin
     if(ena) 
