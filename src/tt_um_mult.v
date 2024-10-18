@@ -39,7 +39,7 @@ module tt_um_mult # (
 
    always @(row) begin
       if(row==3'b0 && en) 
-         pipe_out <= temp_out;
+         pipe_out = temp_out;
   end
 
    assign VecOut = pipe_out[({3'b0, row}<<3)+:BitWidth];

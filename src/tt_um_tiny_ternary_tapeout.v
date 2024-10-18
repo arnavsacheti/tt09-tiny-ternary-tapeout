@@ -19,8 +19,6 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
   localparam BitWidth = 8;
-  localparam IDLE_TO_LOAD = 2'b10;
-  localparam IDLE_TO_MULT = 2'b11;
 
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
@@ -29,54 +27,33 @@ module tt_um_tiny_ternary_tapeout #(
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
 
-
   wire [15:0] ui_input = {ui_in, uio_in};
 
   localparam IDLE = 0;
-  localparam LOAD = 2;
-  localparam MULT = 1;
+  localparam LOAD = 1;
+  localparam MULT = 2;
 
   // wire internal_reset;
   reg [1:0] state;
   reg [3:0] count;
 
-  reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                      load_done;
+  // reg [15:0] col;
 
-  always @(posedge clk) begin
+  wire [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+
+  always @(posedge clk or negedge rst_n) begin
     if(!rst_n) begin
-      state     <= IDLE;
+      state <= IDLE;
+      count <= 'h0;
+      // col   <= 'h1;
     end else begin
       case (state)
-        IDLE : begin
-          if(ui_input[13:12] == IDLE_TO_LOAD) begin
-            state      <= LOAD;
-          end else if(ui_input[13:12] == IDLE_TO_MULT) begin
-            state      <= MULT;
-          end else begin
-            state      <= IDLE;
-          end
-        end 
-        LOAD : begin
-          if(load_done) begin
-            state <= MULT;
-          end else begin
-            state <= LOAD;
-          end
-        end
-        MULT : begin
-          state  <= MULT;
-        end
-        default: state <= IDLE;
+        IDLE: if (|ui_input) state <= LOAD;
+        LOAD: if (&count) state <= MULT;
       endcase
-    end
-  end
 
-  always @(posedge clk) begin
-    if(!rst_n) begin
-      count <= 'h0;
-    end else if (state!=2'b00) begin
-      count <= count + 1;
+      count <= count + {3'b0, |state};
+      // col   <= (state == LOAD) ? {col[14:0], col[15]} : col;
     end
   end
    
@@ -84,13 +61,11 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
-    .clk        (clk),
-    .count      (count),
-    .rst_n      (rst_n),
-    .ena        (state[1]),
+    .ena        (state[0]),
     .ui_input   (ui_input),
-    .uo_weights (load_weights),
-    .uo_done    (load_done)
+    .ui_col     (count),
+    // .ui_col     (col),
+    .uo_weights (load_weights)
   );
 
   tt_um_mult #(
@@ -101,7 +76,7 @@ module tt_um_tiny_ternary_tapeout #(
 		    .clk(clk),
         .row(count[2:0]),
 		    .rst_n(rst_n),
-		    .en( state[0]),
+		    .en(state[1]),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)
