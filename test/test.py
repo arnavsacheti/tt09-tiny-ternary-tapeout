@@ -36,8 +36,6 @@ async def test_project(dut) -> None:
     values = [-1, 0, 1]
     w = np.random.choice(values, size=(16, 8)).tolist()
     await weights.set_weights(w)
-    
-
 
     vecs = Vecs(dut, w)
     await vecs.drive_vecs(runs=15, enabled=True)

@@ -1,6 +1,7 @@
 from ast import match_case
 import cocotb
 from cocotb.triggers import RisingEdge
+import numpy as np
 
 class Weights:
   MAX_IN_LEN = 16
@@ -19,6 +20,8 @@ class Weights:
     self.m = len(self.weights[0])
 
   async def drive_weights(self, start = 1):
+    self.dut._log.info(f"Weights {np.array(self.weights)}")
+
     assert (0 < self.n <= self.MAX_IN_LEN)
     assert (0 < self.m <= self.MAX_OUT_LEN)
 
@@ -26,23 +29,21 @@ class Weights:
     self.dut.uio_in.value = ((self.m-1) & 0x7) << 5 | start & 0x01
     await RisingEdge(self.dut.clk)
 
-    for m in range(self.m):
-      col: list[int] = [row[m] for row in self.weights]
-      msb: int = 0
-      lsb: int = 0
-      for i, val in enumerate(col):
+    for m in range(self.n):
+      row_num = (m*2% self.n)
+      row_num = row_num + 1 if m >= self.n/2 else row_num
+      self.dut._log.info(f"Row num {row_num}")
+      row: list[int] = self.weights[row_num]
+      bus_in = 0
+      for i, val in enumerate(row):
         msb_val, lsb_val = self.mapping[val]
-        msb |= (msb_val & 0b1) << i
-        lsb |= (lsb_val & 0b1) << i
+        bus_in |= (msb_val & 0b1) << (len(row) - i - 1)*2+1
+        bus_in |= (lsb_val & 0b1) << (len(row) - i - 1)*2
         # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
       
-      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
-      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
-      self.dut.uio_in.value = (lsb & 0XFF)
-      await RisingEdge(self.dut.clk)
-      
-      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
-      self.dut.uio_in.value = (msb & 0XFF)
+      self.dut._log.info(f"Setting [col: {row}, bits: {hex(bus_in)}]")
+      self.dut.ui_in.value  = (bus_in & 0xFF00) >> 8
+      self.dut.uio_in.value = (bus_in & 0XFF)
       await RisingEdge(self.dut.clk)
 
 

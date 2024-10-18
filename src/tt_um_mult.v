@@ -17,12 +17,13 @@ module tt_um_mult # (
    input wire [(2 * InLen * OutLen)-1: 0] W,
    output wire [BitWidth-1:0] VecOut
 );
+
    reg [BitWidth*OutLen-1:0]             temp_out;
    reg [BitWidth*OutLen-1:0]             pipe_out;
    integer                               col;
 
-   wire [2*OutLen-1:0] row_data1 = W[({24'b0, row, 5'b0_0000})+: 2*OutLen]; // Register to hold the entire row
-   wire [2*OutLen-1:0] row_data2 = W[({24'b0, row, 5'b1_0000})+: 2*OutLen]; // Register to hold the entire row
+   wire [2*OutLen-1:0] row_data1 = W[0+:  16]; // Register to hold the entire row
+   wire [2*OutLen-1:0] row_data2 = W[16+: 16]; // Register to hold the entire row
 
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
