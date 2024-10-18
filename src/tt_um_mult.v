@@ -14,7 +14,7 @@ module tt_um_mult # (
    input wire			     en,
    input wire [BitWidth*2-1:0]      VecIn, 
    input wire [(2 * InLen * OutLen)-1: 0] W,
-   output reg [BitWidth-1:0] VecOut
+   output wire [BitWidth-1:0] VecOut
 );
 
    reg [2:0]                             row;
@@ -23,15 +23,12 @@ module tt_um_mult # (
    integer                               col;
    integer                               i, j;
 
-   localparam [2:0] row_end = 3'b111;
-
    always @(posedge clk or negedge rst_n) begin
       if (!rst_n) begin
          // Reset all state variables
          row <= 3'b0;
          temp_out <= {(BitWidth*OutLen){1'b0}};
          pipe_out <= {BitWidth*(OutLen-1){1'b0}};
-         VecOut   <= {BitWidth{1'b0}};
       end else if (en) begin
          // Logic for computing the temporary sums (before piping into registers)
          for (col = 0; col < 2*OutLen; col = col + 2) begin
@@ -46,19 +43,10 @@ module tt_um_mult # (
          row <= row + 3'b1;
          // Increment the row
          // If we are at the end of the loop
-         if (row == 3'b0) begin
-            // the output is set now - compute the first vec out
-            VecOut <= temp_out[0+:BitWidth];
-            pipe_out <= temp_out[BitWidth+:BitWidth*(OutLen-1)];
-         // if pipelining then output the value from pipe_out
-         end else begin
-            VecOut <= pipe_out[({3'b0, row-1'b1}<<3)+:BitWidth]; 
-         end
-      end else begin
-         // Reset state when enable is low
-         row <= 3'b0;
-         VecOut <= {BitWidth{1'b0}};
+         pipe_out <= |row ? pipe_out >> BitWidth : temp_out[BitWidth+:BitWidth*(OutLen-1)];
       end
    end
+
+   assign VecOut = |row ? pipe_out[0+:BitWidth] : temp_out[0+:BitWidth];
 
 endmodule
