@@ -11,7 +11,6 @@ module tt_um_mult # (
 )(
    input wire			     clk,
    input wire [2:0]       row,
-   input wire			     rst_n,
    input wire			     en,
    input wire [BitWidth*2-1:0]      VecIn, 
    input wire [(2 * InLen * OutLen)-1: 0] W,
@@ -41,11 +40,7 @@ module tt_um_mult # (
 
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
-      if (~rst_n) begin
-         temp_out <= 'h0;
-      end else begin
-         temp_out <= temp_out_d;
-      end
+      temp_out <= temp_out_d;
    end
 
    always @(row) begin
