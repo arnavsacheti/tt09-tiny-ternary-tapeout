@@ -18,23 +18,33 @@ module tt_um_mult # (
    output wire [BitWidth-1:0] VecOut
 );
    reg [BitWidth*OutLen-1:0]             temp_out;
+   wire [BitWidth*OutLen-1:0]            temp_out_d;
    reg [BitWidth*OutLen-1:0]             pipe_out;
-   integer                               col;
 
    wire [2*OutLen-1:0] row_data1 = W[{row, 1'b0, 4'h0} +: 2*OutLen]; // Register to hold the entire row
    wire [2*OutLen-1:0] row_data2 = W[{row, 1'b1, 4'h0} +: 2*OutLen]; // Register to hold the entire row
 
+   wire [BitWidth*2-1:0] VecIn_neg;
+   genvar  gi;
+
+   for (gi = 0; gi < 2; gi++) begin
+      assign VecIn_neg[gi * BitWidth +: BitWidth] = ~VecIn[gi * BitWidth +: BitWidth] + 1;
+   end
+
+   for (gi = 0; gi < OutLen; gi++) begin
+      assign temp_out_d[gi << 3 +: BitWidth] = ((row_data1[{gi[2:0], 1'b1}] ? VecIn_neg[BitWidth+:BitWidth] : VecIn[BitWidth+:BitWidth]) 
+                                                   & {BitWidth{row_data1[{gi[2:0], 1'b0}]}}) +
+                                               ((row_data2[{gi[2:0], 1'b1}] ? VecIn_neg[BitWidth+:BitWidth] : VecIn[BitWidth+:BitWidth]) 
+                                                   & {BitWidth{row_data1[{gi[2:0], 1'b0}]}})  +
+                                               (temp_out[gi<<3+:BitWidth] & {BitWidth{|row}});
+   end
+
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
-      
-      for (col = 0; col < InLen; col = col + 1) begin
-            // If we are not at the end of the loop
-            // Update temp_out based on current W values
-            temp_out[(col<<3)+:BitWidth] <= (row_data1[col[3:0] + 1'b1] ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                                             row_data1[col[3:0]] ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                                            (row_data2[col[3:0] + 1'b1] ? (-$signed(VecIn[0+:BitWidth])) :
-                                             row_data2[col[3:0]] ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                                            (|row ? $signed(temp_out[col<<2+:BitWidth]) : {BitWidth{1'b0}});
+      if (~rst_n) begin
+         temp_out <= 'h0;
+      end else begin
+         temp_out <= temp_out_d;
       end
    end
 

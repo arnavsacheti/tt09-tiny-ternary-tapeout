@@ -9,7 +9,7 @@ debug:
 	$(TOOL) --debug --create-user-config $(FLOW)
 	$(TOOL) --debug --harden $(FLOW)
 
-gds:
+gds: src/*
 	$(TOOL) --create-user-config $(FLOW)
 	$(TOOL) --harden $(FLOW)
 
