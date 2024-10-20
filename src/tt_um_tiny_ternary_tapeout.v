@@ -33,11 +33,8 @@ module tt_um_tiny_ternary_tapeout #(
   localparam LOAD = 1;
   localparam MULT = 2;
 
-  // wire internal_reset;
   reg [1:0] state;
   reg [3:0] count;
-
-  // reg [15:0] col;
 
   wire [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
 
@@ -45,7 +42,6 @@ module tt_um_tiny_ternary_tapeout #(
     if(!rst_n) begin
       state <= IDLE;
       count <= 'h0;
-      // col   <= 'h1;
     end else begin
       case (state)
         IDLE: if (|ui_input) state <= LOAD;
@@ -53,7 +49,6 @@ module tt_um_tiny_ternary_tapeout #(
       endcase
 
       count <= count + {3'b0, |state};
-      // col   <= (state == LOAD) ? {col[14:0], col[15]} : col;
     end
   end
    
@@ -64,7 +59,6 @@ module tt_um_tiny_ternary_tapeout #(
     .ena        (state[0]),
     .ui_input   (ui_input),
     .ui_col     (count),
-    // .ui_col     (col),
     .uo_weights (load_weights)
   );
 
