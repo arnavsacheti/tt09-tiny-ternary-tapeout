@@ -56,9 +56,9 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
+    .clk        (clk),
     .ena        (state[0]),
     .ui_input   (ui_input),
-    .ui_col     (count),
     .uo_weights (load_weights)
   );
 
