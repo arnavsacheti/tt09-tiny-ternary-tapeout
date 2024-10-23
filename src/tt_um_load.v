@@ -13,6 +13,7 @@ module tt_um_load # (
   parameter MAX_OUT_BITS = $clog2(MAX_OUT_LEN),
   parameter WIDTH_BITS   = $clog2(WIDTH)
 )(
+  input                                             clk,        // Clock
   input                                             ena,        // always 1 when the module is selected
   input  [MAX_IN_LEN-1:0]                           ui_input,   // Dedicated inputs
   input  [MAX_OUT_BITS + WIDTH_BITS - 1:0]          ui_col,     // Column to load

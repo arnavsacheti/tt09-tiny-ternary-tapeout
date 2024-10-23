@@ -33,22 +33,27 @@ module tt_um_tiny_ternary_tapeout #(
   localparam LOAD = 1;
   localparam MULT = 2;
 
-  reg [1:0] state;
-  reg [3:0] count;
+  reg [1:0] state_pos;
+  reg [1:0] state_neg;
+  reg [3:0] count_pos;
+  reg [3:0] count_neg;
 
   wire [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(clk) begin
     if(!rst_n) begin
-      state <= IDLE;
-      count <= 'h0;
-    end else begin
-      case (state)
-        IDLE: if (|ui_input) state <= LOAD;
-        LOAD: if (&count) state <= MULT;
+      state_neg = IDLE;
+      count_neg = 'h0;
+    end else if (clk) begin
+      case (state_neg)
+        IDLE: if (|ui_input) state_pos = LOAD;
+        LOAD: if (&count_neg) state_pos = MULT;
       endcase
-
-      count <= count + {3'b0, |state};
+      count_pos = count_neg + {3'b0, |state_neg};
+    end
+    else begin
+      state_neg = state_pos;
+      count_neg = count_pos;
     end
   end
    
@@ -56,9 +61,10 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
-    .ena        (state[0]),
+    .clk        (clk),
+    .ena        (state_neg[0]),
     .ui_input   (ui_input),
-    .ui_col     (count),
+    .ui_col     (count_neg),
     .uo_weights (load_weights)
   );
 
@@ -68,8 +74,8 @@ module tt_um_tiny_ternary_tapeout #(
 	       .BitWidth(BitWidth)
   ) tt_um_mult_inst (
 		    .clk(clk),
-        .row(count[2:0]),
-		    .en(state[1]),
+        .row(count_neg[2:0]),
+		    .en(state_neg[1]),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)
