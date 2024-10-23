@@ -27,14 +27,14 @@ module tt_um_mult # (
    genvar  gi;
 
    for (gi = 0; gi < 2; gi++) begin
-      assign VecIn_neg[gi * BitWidth +: BitWidth] = ~VecIn[gi * BitWidth +: BitWidth] + 1;
+      assign VecIn_neg[gi * BitWidth +: BitWidth] = -VecIn[gi * BitWidth +: BitWidth];
    end
 
    for (gi = 0; gi < OutLen; gi++) begin
       assign temp_out_d[gi << 3 +: BitWidth] = ((row_data1[{gi[2:0], 1'b1}] ? VecIn_neg[BitWidth+:BitWidth] : VecIn[BitWidth+:BitWidth]) 
                                                    & {BitWidth{row_data1[{gi[2:0], 1'b0}]}}) +
-                                               ((row_data2[{gi[2:0], 1'b1}] ? VecIn_neg[BitWidth+:BitWidth] : VecIn[BitWidth+:BitWidth]) 
-                                                   & {BitWidth{row_data1[{gi[2:0], 1'b0}]}})  +
+                                               ((row_data2[{gi[2:0], 1'b1}] ? VecIn_neg[0+:BitWidth] : VecIn[0+:BitWidth]) 
+                                                   & {BitWidth{row_data2[{gi[2:0], 1'b0}]}})  +
                                                (temp_out[gi<<3+:BitWidth] & {BitWidth{|row}});
    end
 
@@ -44,7 +44,7 @@ module tt_um_mult # (
    end
 
    always @(row) begin
-      if(~|row && en) 
+      if(~|row & en) 
          pipe_out = temp_out;
   end
 
