@@ -21,33 +21,34 @@ class Weights:
   async def drive_weights(self, start = 1):
     assert (0 < self.n <= self.MAX_IN_LEN)
     assert (0 < self.m <= self.MAX_OUT_LEN)
-
-    self.dut.ui_in.value  = (0xA << 4) + ((self.n-1) & 0xF)
-    self.dut.uio_in.value = ((self.m-1) & 0x7) << 5 | start & 0x01
-    await RisingEdge(self.dut.clk)
-
-    for m in range(self.m):
-      col: list[int] = [row[m] for row in self.weights]
-      msb: int = 0
-      lsb: int = 0
-      for i, val in enumerate(col):
+    out = 0
+    self.dut.ui_in.value  = 0x00
+    self.dut.uio_in.value = 0x00
+    # await RisingEdge(self.dut.clk)
+    rows = []
+    for i in range(self.n//2):
+      rows.append(i * 2)
+    for i in range(self.n//2):
+      rows.append(i * 2 + 1)
+    for n in rows:
+      row: list[int] = self.weights[n]
+      row_bits = 0
+      for i, val in enumerate(row):
         msb_val, lsb_val = self.mapping[val]
-        msb |= (msb_val & 0b1) << i
-        lsb |= (lsb_val & 0b1) << i
-        # self.dut._log.info(f"for val {val}, msb {bin(msb)}, lsb {bin(msb)}")
-      
-      self.dut._log.info(f"Setting [col: {col}, MSB: {bin(msb)},  LSB: {bin(lsb)}]")
-      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
-      self.dut.uio_in.value = (lsb & 0XFF)
+        row_bits |= (msb_val & 0b1) << (i)*2 + 1 # len(row) - 1 - 
+        row_bits |= (lsb_val & 0b1) << (i)*2     # len(row) - 1 - 
+      out = (out << (28)) | row_bits  
+      self.dut._log.info(f"Setting [row: {row}, bits: {bin(row_bits)}] {n}")
+      # self.dut._log.info(f"Pred weights {n}, vals {hex(out)}")
+      self.dut.ui_in.value  = (row_bits & 0xFF00) >> 8
+      self.dut.uio_in.value = (row_bits & 0XFF)
       await RisingEdge(self.dut.clk)
-      
-      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
-      self.dut.uio_in.value = (msb & 0XFF)
-      await RisingEdge(self.dut.clk)
+      self.dut._log.info(f"Wrote [28bits: {self.dut.tt_um_t3_inst.tt_um_load_inst.input_to_sr.value}], {n}")
 
-
+    # self.dut._log.info(f"Pred weights {hex(out)}")
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
+    
       
   async def set_weights(self, weights: list[list[int]], start = 0):
     self.weights = weights
