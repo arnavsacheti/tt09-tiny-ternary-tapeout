@@ -46,18 +46,9 @@ module tt_um_tiny_ternary_tapeout #(
     if(!rst_n) begin
       state     <= LOAD;
     end else begin
-      case (state)
-        LOAD : begin
-          if(&count[3:1]) begin
-            state <= MULT;
-          end else begin
-            state <= LOAD;
-          end
-        end
-        MULT : begin
-          state  <= MULT;
-        end
-      endcase
+      if(state == LOAD) begin
+        state <= &count[3:1];
+      end
     end
   end
 
