@@ -25,15 +25,15 @@ class Vecs:
         new_cycle = ((self.N) + cycle*2) % self.N
         self.dut.ui_in.value  = self.vecs_in[new_cycle+1] # higher 8 bits
         self.dut.uio_in.value = self.vecs_in[new_cycle] # lower 8 bits
-        self.dut._log.info(f"Cycle {new_cycle}")
-        self.dut._log.info(f"Inputting [v1: {self.dut.tt_um_t3_inst.tt_um_mult_inst.VecIn.value[8:15].signed_integer}]")
-        self.dut._log.info(f"Inputting [v2: {self.dut.tt_um_t3_inst.tt_um_mult_inst.VecIn.value[0:7].signed_integer}]")
-        self.dut._log.info(f"Reading [row1: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row_data1.value}]")
-        self.dut._log.info(f"Reading [row2: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row_data2.value}]")
-        self.dut._log.info(f"Row num [row: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row.value.integer}]")
+        # self.dut._log.info(f"Cycle {new_cycle}")
+        # self.dut._log.info(f"Inputting [v1: {self.dut.tt_um_t3_inst.tt_um_mult_inst.VecIn.value[8:15].signed_integer}]")
+        # self.dut._log.info(f"Inputting [v2: {self.dut.tt_um_t3_inst.tt_um_mult_inst.VecIn.value[0:7].signed_integer}]")
+        # self.dut._log.info(f"Reading [row1: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row_data1.value}]")
+        # self.dut._log.info(f"Reading [row2: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row_data2.value}]")
+        # self.dut._log.info(f"Row num [row: {self.dut.tt_um_t3_inst.tt_um_mult_inst.row.value.integer}]")
         await RisingEdge(self.dut.clk)
-        self.dut._log.info(f"New Temp0: {self.dut.tt_um_t3_inst.tt_um_mult_inst.temp_out.value[0:7].signed_integer}")
-        self.dut._log.info(f"New Pipe0: {self.dut.tt_um_t3_inst.tt_um_mult_inst.pipe_out.value[0:7].signed_integer}")
+        # self.dut._log.info(f"New Temp0: {self.dut.tt_um_t3_inst.tt_um_mult_inst.temp_out.value[0:7].signed_integer}")
+        # self.dut._log.info(f"New Pipe0: {self.dut.tt_um_t3_inst.tt_um_mult_inst.pipe_out.value[0:7].signed_integer}")
         if (pipeline_out==True) :
           # pass
           assert self.prev[cycle] == self.dut.uo_out.value.signed_integer
