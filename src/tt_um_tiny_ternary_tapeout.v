@@ -30,7 +30,6 @@ module tt_um_tiny_ternary_tapeout #(
   wire [15:0] ui_input = {ui_in, uio_in};
 
   localparam LOAD = 0;
-  localparam MULT = 1;
 
   // wire internal_reset;
   reg state;
@@ -65,9 +64,9 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
-    .count      (count),
+    .half      (count[3]),
     .ena        (!state),
-    .ui_input   (ui_input),
+    .ui_input   (ui_input[13:0]),
     .uo_weights (load_weights)
   );
 
@@ -78,7 +77,6 @@ module tt_um_tiny_ternary_tapeout #(
   ) tt_um_mult_inst (
 		    .clk(clk),
         .row(count[2:0]),
-		    .en(state),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)

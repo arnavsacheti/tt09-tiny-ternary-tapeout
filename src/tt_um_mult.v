@@ -11,14 +11,13 @@ module tt_um_mult # (
 )(
    input wire			     clk,
    input wire [2:0]       row,
-   input wire			     en,
    input wire [BitWidth*2-1:0]      VecIn, 
    input wire [(2 * InLen)-1: 0] W,
    output wire [BitWidth-1:0] VecOut
 );
    reg [BitWidth*OutLen-1:0]             temp_out;
+   wire [BitWidth*OutLen-1:0]             temp_out_q;
    reg [BitWidth*OutLen-1:0]             pipe_out;
-   integer                               col;
 
    // wire [2*OutLen-1:0] row_data1 = W[({24'b0, row, 5'b0_0000})+: 2*OutLen]; // Register to hold the entire row
    // wire [2*OutLen-1:0] row_data2 = W[({24'b0, row, 5'b1_0000})+: 2*OutLen]; // Register to hold the entire row
@@ -28,20 +27,23 @@ module tt_um_mult # (
 
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
-      for (col = 0; col < OutLen*2; col = col + 2) begin
-            // If we are not at the end of the loop
-            // Update temp_out based on current W values
-            temp_out[(col<<2)+:BitWidth] <= (row_data1[(col)+1] ? (-$signed(VecIn[0+:BitWidth])) :
-                                             row_data1[(col)+0] ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                                            (row_data2[(col)+1] ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                                             row_data2[(col)+0] ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
-                                            (row[2:0] == 3'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col<<2)+:BitWidth]));
-      end
+      temp_out <= temp_out_q;
    end
+
+   genvar gcol;
+   generate
+      for (gcol = 0; gcol < OutLen*2; gcol = gcol + 2) begin
+            assign temp_out_q[(gcol<<2)+:BitWidth] = (row_data1[(gcol)+1] ? (-$signed(VecIn[0+:BitWidth])) :
+                                                      row_data1[(gcol)+0] ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                     (row_data2[(gcol)+1] ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                                                      row_data2[(gcol)+0] ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+                                                     (row[2:0] == 3'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(gcol<<2)+:BitWidth]));
+      end
+   endgenerate
 
    always @(row) begin
       if(row[2:0] == 3'b000)
-         pipe_out = temp_out;
+         pipe_out <= temp_out;
    end
 
    assign VecOut = pipe_out[({3'b0, row[2:0]}<<3)+:BitWidth];
