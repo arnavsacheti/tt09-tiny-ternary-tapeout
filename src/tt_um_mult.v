@@ -40,7 +40,7 @@ module tt_um_mult # (
       end
    end
 
-   always @(row) begin
+   always @(clk or row) begin
       if(clk && row[2:0] == 3'b000)
          pipe_out = temp_out;
    end
