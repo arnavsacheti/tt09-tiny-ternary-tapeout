@@ -19,8 +19,6 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
   localparam BitWidth = 8;
-  localparam IDLE_TO_LOAD = 2'b10;
-  localparam IDLE_TO_MULT = 2'b11;
 
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
@@ -28,7 +26,6 @@ module tt_um_tiny_ternary_tapeout #(
 
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
-
 
   wire [15:0] ui_input = {ui_in, uio_in};
 
