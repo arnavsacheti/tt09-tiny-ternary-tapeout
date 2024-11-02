@@ -41,8 +41,8 @@ module tt_um_mult # (
    end
 
    always @(row) begin
-      if(row[2:0] == 3'b000)
-         pipe_out <= temp_out;
+      if(clk && row[2:0] == 3'b000)
+         pipe_out = temp_out;
    end
 
    assign VecOut = pipe_out[({3'b0, row[2:0]}<<3)+:BitWidth];
