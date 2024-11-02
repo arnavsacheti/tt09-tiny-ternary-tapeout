@@ -11,7 +11,6 @@ module tt_um_mult # (
 )(
    input wire			     clk,
    input wire [2:0]       row,
-   input wire			     rst_n,
    input wire			     en,
    input wire [BitWidth*2-1:0]      VecIn, 
    input wire [(2 * InLen)-1: 0] W,

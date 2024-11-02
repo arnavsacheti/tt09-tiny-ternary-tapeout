@@ -66,7 +66,6 @@ module tt_um_tiny_ternary_tapeout #(
   ) tt_um_load_inst (
     .clk        (clk),
     .count      (count),
-    .rst_n      (rst_n),
     .ena        (!state),
     .ui_input   (ui_input),
     .uo_weights (load_weights)
@@ -79,7 +78,6 @@ module tt_um_tiny_ternary_tapeout #(
   ) tt_um_mult_inst (
 		    .clk(clk),
         .row(count[2:0]),
-		    .rst_n(rst_n),
 		    .en(state),
 		    .VecIn(ui_input),
 		    .W(load_weights),

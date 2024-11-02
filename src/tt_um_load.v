@@ -14,8 +14,7 @@ module tt_um_load # (
   parameter WIDTH_BITS   = $clog2(WIDTH)
 )(
   input                               clk,        // clock
-  input [3:0]                         count,
-  input                               rst_n,      // reset_n - low to reset
+  input [3:0]                         count,      // counter
   input                               ena,        // always 1 when the module is selected
   input  [15:0]                       ui_input,   // Dedicated inputs
   output [(WIDTH * MAX_IN_LEN) - 1:0] uo_weights // Loaded in Weights - finished setting one cycle after done
@@ -26,7 +25,8 @@ module tt_um_load # (
 
   wire [27:0] input_to_sr;
 
-  assign input_to_sr = count[3] ? {ui_input[13:0], weights[0+:14]} : {ui_input[13:0], ui_input[13:0]}; // loading by halves
+  assign input_to_sr = count[3] ? {ui_input[13:0], weights[0+:14]} 
+                                : {ui_input[13:0], ui_input[13:0]}; // loading by halves
 
   always @ (posedge clk) begin
     if (ena) begin
