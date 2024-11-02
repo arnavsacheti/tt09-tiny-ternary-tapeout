@@ -14,7 +14,7 @@ module tt_um_mult # (
    input wire			     rst_n,
    input wire			     en,
    input wire [BitWidth*2-1:0]      VecIn, 
-   input wire [(2 * InLen * OutLen)-1: 0] W,
+   input wire [(2 * InLen)-1: 0] W,
    output wire [BitWidth-1:0] VecOut
 );
    reg [BitWidth*OutLen-1:0]             temp_out;

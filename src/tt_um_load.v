@@ -13,12 +13,12 @@ module tt_um_load # (
   parameter MAX_OUT_BITS = $clog2(MAX_OUT_LEN),
   parameter WIDTH_BITS   = $clog2(WIDTH)
 )(
-  input                                             clk,        // clock
-  input [3:0]           count,
-  input                                             rst_n,      // reset_n - low to reset
-  input                                             ena,        // always 1 when the module is selected
-  input  [15:0]                           ui_input,   // Dedicated inputs
-  output [(WIDTH * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] uo_weights // Loaded in Weights - finished setting one cycle after done
+  input                               clk,        // clock
+  input [3:0]                         count,
+  input                               rst_n,      // reset_n - low to reset
+  input                               ena,        // always 1 when the module is selected
+  input  [15:0]                       ui_input,   // Dedicated inputs
+  output [(WIDTH * MAX_IN_LEN) - 1:0] uo_weights // Loaded in Weights - finished setting one cycle after done
 );
 
   integer                                        idx;
@@ -36,6 +36,6 @@ module tt_um_load # (
     end
   end
 
-  assign uo_weights = weights;
+  assign uo_weights = weights[0+:WIDTH * MAX_IN_LEN];
 
 endmodule : tt_um_load

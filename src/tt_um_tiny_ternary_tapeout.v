@@ -39,8 +39,7 @@ module tt_um_tiny_ternary_tapeout #(
   reg state;
   reg [3:0] count;
 
-  reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                      load_done;
+  wire [(2 * MAX_IN_LEN)-1: 0] load_weights;
 
   always @(posedge clk) begin
     if(!rst_n) begin
