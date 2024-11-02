@@ -31,16 +31,16 @@ module tt_um_mult # (
       for (col = 0; col < OutLen*2; col = col + 2) begin
             // If we are not at the end of the loop
             // Update temp_out based on current W values
-            temp_out[(col<<2)+:BitWidth] <= (row_data1[(col)+:2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
-                                             row_data1[(col)+:2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
-                                            (row_data2[(col)+:2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
-                                             row_data2[(col)+:2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+            temp_out[(col<<2)+:BitWidth] <= (row_data1[(col)+1] ? (-$signed(VecIn[0+:BitWidth])) :
+                                             row_data1[(col)+0] ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+                                            (row_data2[(col)+1] ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+                                             row_data2[(col)+0] ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
                                             (row[2:0] == 3'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col<<2)+:BitWidth]));
       end
    end
 
-   always @(clk or row) begin
-      if(clk && row[2:0] == 3'b000)
+   always @(row) begin
+      if(row[2:0] == 3'b000)
          pipe_out = temp_out;
    end
 
