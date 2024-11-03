@@ -25,7 +25,7 @@ module tt_um_mult # (
    wire [2*OutLen-1:0] row_data1 = W[0+: 2*OutLen]; // wire to hold the 0th row
    wire [2*OutLen-1:0] row_data2 = W[14+: 2*OutLen]; // wire to hold the 1st row - reduces usage to 73% (not all latches synth)
 
-   always @(posedge clk) begin
+   always @(negedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
       temp_out <= temp_out_q;
    end
