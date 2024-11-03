@@ -16,9 +16,9 @@ During the configuration stage, parameters for the weight matrix are loaded, tak
 The multiplication stage involves performing a series of select, add, and output operations. These operations are pipelined across the weight matrix and are completed in 7 clock cycles, resulting in a latency of 160ns and a throughput of 1.4 Gops.
 
 ### Loading the Weights Matrix
-The weights matrix is of size \(14 \times 7\) with values in \(\{-1, 0, 1\}\):
+The weights matrix is of size $$14 \times 7$$ with values in $$\{-1, 0, 1\}$$:
 
-\[
+$$
 \begin{bmatrix}
 -1 & 0 & 1 & \dots & -1 \\
 0 & 1 & -1 & \dots & 1  \\
@@ -26,14 +26,14 @@ The weights matrix is of size \(14 \times 7\) with values in \(\{-1, 0, 1\}\):
 \vdots & \vdots & \vdots & \ddots & \vdots \\
 -1 & 1 & 0 & \dots & 1
 \end{bmatrix}
-\]
+$$
 Next, we represent each value in 2-bit binary and squash the whole row:
 
 - **-1**: \(11_2\)
 - **0**: \(00_2\)
 - **1**: \(01_2\)
 
-\[
+$$
 \begin{bmatrix}
 11 00 01 \dots 11_2 \\
 00 01 11 \dots 01_2  \\
@@ -41,11 +41,11 @@ Next, we represent each value in 2-bit binary and squash the whole row:
 \vdots & \vdots & \vdots & \ddots & \vdots \\
 11 01 00 & \dots & 01
 \end{bmatrix}
-\]
+$$
 
 we can now march through each column sending in Little Endian order:
 
-\[
+$$
 \begin{bmatrix}
 11 \\
 00 \\
@@ -53,7 +53,7 @@ we can now march through each column sending in Little Endian order:
 \vdots \\
 11
 \end{bmatrix}
-\]
+$$
 
 ## How to test
 
