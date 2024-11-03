@@ -19,8 +19,6 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
   localparam BitWidth = 8;
-  localparam IDLE_TO_LOAD = 2'b10;
-  localparam IDLE_TO_MULT = 2'b11;
 
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
@@ -29,18 +27,15 @@ module tt_um_tiny_ternary_tapeout #(
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
 
-
   wire [15:0] ui_input = {ui_in, uio_in};
 
   localparam LOAD = 0;
-  localparam MULT = 1;
 
   // wire internal_reset;
   reg state;
   reg [3:0] count;
 
-  reg [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                      load_done;
+  wire [(2 * MAX_IN_LEN)-1: 0] load_weights;
 
   always @(posedge clk) begin
     if(!rst_n) begin
@@ -69,10 +64,9 @@ module tt_um_tiny_ternary_tapeout #(
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
-    .count      (count),
-    .rst_n      (rst_n),
+    .half      (count[3]),
     .ena        (!state),
-    .ui_input   (ui_input),
+    .ui_input   (ui_input[13:0]),
     .uo_weights (load_weights)
   );
 
@@ -83,8 +77,6 @@ module tt_um_tiny_ternary_tapeout #(
   ) tt_um_mult_inst (
 		    .clk(clk),
         .row(count[2:0]),
-		    .rst_n(rst_n),
-		    .en(state),
 		    .VecIn(ui_input),
 		    .W(load_weights),
 		    .VecOut(uo_out)

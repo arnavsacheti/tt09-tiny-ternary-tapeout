@@ -1,3 +1,4 @@
+
 from ast import match_case
 import cocotb
 from cocotb.triggers import RisingEdge
@@ -43,7 +44,7 @@ class Weights:
       self.dut.ui_in.value  = (row_bits & 0xFF00) >> 8
       self.dut.uio_in.value = (row_bits & 0XFF)
       await RisingEdge(self.dut.clk)
-      self.dut._log.info(f"Wrote [28bits: {self.dut.tt_um_t3_inst.tt_um_load_inst.input_to_sr.value}], {n}")
+      # self.dut._log.info(f"Wrote [28bits: {self.dut.tt_um_t3_inst.tt_um_load_inst.input_to_sr.value}], {n}")
 
     # self.dut._log.info(f"Pred weights {hex(out)}")
     self.dut.ui_in.value  = 0
