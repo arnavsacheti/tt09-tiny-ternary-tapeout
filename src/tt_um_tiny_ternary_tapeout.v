@@ -6,8 +6,8 @@
 `default_nettype none
 
 module tt_um_tiny_ternary_tapeout #(
-  parameter MAX_IN_LEN  = 16,
-  parameter MAX_OUT_LEN = 8
+  parameter MAX_IN_LEN  = 10,
+  parameter MAX_OUT_LEN = 5
 ) (
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
@@ -18,8 +18,7 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
-  localparam IDLE_TO_LOAD = 'hA;
-
+  localparam BitWidth = 8;
 
   // Assign Bi-Directional pin to input
   assign uio_oe  = 0;
@@ -28,59 +27,59 @@ module tt_um_tiny_ternary_tapeout #(
   // List all unused inputs to prevent warnings
   wire _unused  = ena;
 
-  wire [15:0] ui_input = {ui_in, uio_in}; 
+  wire [15:0] ui_input = {ui_in, uio_in};
 
-  localparam IDLE = 0;
-  localparam LOAD = 1;
-  // localparam MULT = 2;
-  // localparam OUT  = 3;
+  localparam LOAD = 0;
 
-  reg [1:0] state;
-  
-  reg [6:0] cfg_param;
+  // wire internal_reset;
+  reg state;
+  reg [3:0] count;
 
-  reg                                               load_ena;
-  wire signed [(2 * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
-  wire                                              load_done;
-
-  assign uo_out = load_weights[7:0];
+  wire [(2 * MAX_IN_LEN)-1: 0] load_weights;
 
   always @(posedge clk) begin
     if(!rst_n) begin
-      state     <= IDLE;
-      cfg_param <= 7'h7F; 
-      load_ena  <= 1'b0;
+      state     <= LOAD;
     end else begin
-      case (state)
-        IDLE : begin
-          if(ui_input[15:12] == IDLE_TO_LOAD) begin
-            state     <= LOAD;
-            cfg_param <= ui_input[11:5];
-            load_ena  <= 1'b1;
-          end
-        end 
-        LOAD : begin
-          if(load_done) begin
-            state    <= IDLE;
-            load_ena <= 1'b0;
-          end
-        end
-        default: state <= IDLE;
-      endcase
+      if(state == LOAD) begin
+        state <= count == 4'b1100;
+      end
     end
   end
 
+  always @(posedge clk) begin
+    if(!rst_n) begin
+      count <=  4'h0;
+    end else begin
+      if (count[2:0] == 3'd4) begin
+        count <= count<<1;
+      end else begin
+        count <= count + 1;
+      end
+    end
+  end
+   
   tt_um_load #(
     .MAX_IN_LEN  (MAX_IN_LEN),
     .MAX_OUT_LEN (MAX_OUT_LEN)
   ) tt_um_load_inst (
     .clk        (clk),
-    .rst_n      (rst_n),
-    .ena        (load_ena),
-    .ui_input   (ui_input),
-    .ui_param   (cfg_param),
-    .uo_weights (load_weights),
-    .uo_done    (load_done)
+    .half      (count[3]),
+    .ena        (!state),
+    .ui_input   (ui_input[11:0]),
+    .uo_weights (load_weights)
   );
+
+  tt_um_mult #(
+	       .InLen(MAX_IN_LEN),
+	       .OutLen(MAX_OUT_LEN),
+	       .BitWidth(BitWidth)
+  ) tt_um_mult_inst (
+		    .clk(clk),
+        .row(count[2:0]),
+		    .VecIn(ui_input),
+		    .W(load_weights),
+		    .VecOut(uo_out)
+		    );
 
 endmodule : tt_um_tiny_ternary_tapeout
