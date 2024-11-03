@@ -28,6 +28,11 @@ module tt_um_mult # (
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
       temp_out <= temp_out_q;
+      if (row[2:0] == 3'b0) begin
+         pipe_out <= temp_out;
+      end else begin
+         pipe_out <= {{BitWidth{1'b0}}, pipe_out[BitWidth*OutLen-1:BitWidth]};
+      end
    end
 
    genvar gcol;
@@ -41,11 +46,12 @@ module tt_um_mult # (
       end
    endgenerate
 
-   always @(row) begin
-      if(row[2:0] == 3'b000)
-         pipe_out = temp_out;
-   end
+   // always @(clk or row) begin
+   //    if (!clk)
+   //       if(row[2:0] == 3'b000)
+   //          pipe_out = temp_out;
+   // end
 
-   assign VecOut = pipe_out[({3'b0, row[2:0]}<<3)+:BitWidth];
+   assign VecOut = pipe_out[0+:BitWidth];
 
 endmodule
