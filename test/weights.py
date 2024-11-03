@@ -31,6 +31,7 @@ class Weights:
       rows.append(i * 2)
     for i in range(self.n//2):
       rows.append(i * 2 + 1)
+    self.dut._log.info(f"Rows: {rows}")
     for n in rows:
       row: list[int] = self.weights[n]
       row_bits = 0

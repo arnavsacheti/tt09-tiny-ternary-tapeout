@@ -33,7 +33,7 @@ async def test_project(dut) -> None:
     # Set the input values you want to test
     weights = Weights(dut)
     values = [-1, 0, 1] # 
-    w = np.random.choice(values, size=(14, 7)).tolist()
+    w = np.random.choice(values, size=(10, 5)).tolist()
     await weights.set_weights(w)
     
 
@@ -59,7 +59,7 @@ async def test_project(dut) -> None:
     dut._log.info("Test project behavior")
 
     # Set the input values you want to test
-    w = np.random.choice(values, size=(14, 7)).tolist()
+    w = np.random.choice(values, size=(10, 5)).tolist()
     await weights.set_weights(w)
     
 

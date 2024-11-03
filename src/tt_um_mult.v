@@ -5,8 +5,8 @@
  
 
 module tt_um_mult # (
-   parameter InLen = 14, 
-   parameter OutLen = 7, 
+   parameter InLen = 10, 
+   parameter OutLen = 5, 
    parameter BitWidth = 8
 )(
    input wire			     clk,
@@ -21,12 +21,12 @@ module tt_um_mult # (
    wire [OutLen*BitWidth-1:0] temp_out_comb;
 
    wire [2*OutLen-1:0] row_data1 = W[0+: 2*OutLen]; // wire to hold the 0th row
-   wire [2*OutLen-1:0] row_data2 = W[14+: 2*OutLen]; // wire to hold the 1st row - reduces usage to 73% (not all latches synth)
+   wire [2*OutLen-1:0] row_data2 = W[InLen+: 2*OutLen]; // wire to hold the 1st row - reduces usage to 73% (not all latches synth)
 
 
    genvar col;
    generate
-      for (col = 0; col < OutLen*2; col = col + 2) begin : compute_temp_out
+      for (col = 0; col < OutLen*2; col = col + 2) begin
          assign temp_out_comb[(col<<2)+:BitWidth] = 
                (row_data1[(col)+:2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
                row_data1[(col)+:2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
@@ -39,8 +39,8 @@ module tt_um_mult # (
    always @(posedge clk) begin
       // Logic for computing the temporary sums (before piping into registers)
       temp_out <= temp_out_comb;
-      if(row[2:0] == 3'b110) begin
-         pipe_out <= temp_out_comb;
+      if(row[2:0] == 3'b000) begin
+         pipe_out <= temp_out;
       end else begin
          pipe_out <= pipe_out >> BitWidth; 
       end

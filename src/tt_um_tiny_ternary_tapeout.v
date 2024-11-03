@@ -6,8 +6,8 @@
 `default_nettype none
 
 module tt_um_tiny_ternary_tapeout #(
-  parameter MAX_IN_LEN  = 14,
-  parameter MAX_OUT_LEN = 7
+  parameter MAX_IN_LEN  = 10,
+  parameter MAX_OUT_LEN = 5
 ) (
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
@@ -42,17 +42,17 @@ module tt_um_tiny_ternary_tapeout #(
       state     <= LOAD;
     end else begin
       if(state == LOAD) begin
-        state <= &count[3:1];
+        state <= count == 4'b1100;
       end
     end
   end
 
   always @(posedge clk) begin
     if(!rst_n) begin
-      count <= 'h0;
+      count <=  4'h0;
     end else begin
-      if (count[2:0] == 3'd6) begin
-        count <= count + 2;
+      if (count[2:0] == 3'd4) begin
+        count <= count<<1;
       end else begin
         count <= count + 1;
       end
@@ -66,7 +66,7 @@ module tt_um_tiny_ternary_tapeout #(
     .clk        (clk),
     .half      (count[3]),
     .ena        (!state),
-    .ui_input   (ui_input[13:0]),
+    .ui_input   (ui_input[11:0]),
     .uo_weights (load_weights)
   );
 
