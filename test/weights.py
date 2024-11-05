@@ -17,8 +17,8 @@ class Weights:
   def __init__(self, dut, weights: list[list[int]] | None =None):
     self.dut = dut
     self.weights: list[list[int]] = weights if weights else [[]]
-    self.n = len(self.weights)
-    self.m = len(self.weights[0])
+    self.m = len(self.weights)
+    self.n = len(self.weights[0])
 
   async def drive_weights(self):
     assert (0 < self.n <= self.MAX_IN_LEN)
@@ -31,31 +31,44 @@ class Weights:
     rows = []
 
     for row in self.weights:
-      bits = 0
+      msb = 0
+      lsb = 0
       for cell in row:
         if (cell == 1):
-          bits = (bits << 2) | 0b01
+          msb = (msb << 1) | 0b0
+          lsb = (lsb << 1) | 0b1
         elif (cell == 0):
-          bits = (bits << 2) | 0b00
+          msb = (msb << 1) | 0b0
+          lsb = (lsb << 1) | 0b0
         elif (cell == -1):
-          bits = (bits << 2) | 0b11
-      rows.append(BinaryValue(bits, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED))
+          msb = (msb << 1) | 0b1
+          lsb = (lsb << 1) | 0b1
+      msb = BinaryValue(msb, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+      lsb = BinaryValue(lsb, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+      rows.append((msb, lsb))
 
     self.dut._log.info(f"Rows: {rows}")
 
     for row in rows[::-1]:
       self.dut._log.info(f"Loading Row into weight: {row}")
-      self.dut.ui_in.value  = (row & 0xFF00) >> 8
-      self.dut.uio_in.value = (row & 0XFF)
+      msb, lsb = row
+
+      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
+      self.dut.uio_in.value = (msb & 0XFF)
+      await RisingEdge(self.dut.clk)
+
+      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
+      self.dut.uio_in.value = (lsb & 0XFF)
       await RisingEdge(self.dut.clk)
 
     # self.dut._log.info(f"Pred weights {hex(out)}")
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
+
   async def set_weights(self, weights: list[list[int]]):
     self.weights = weights
-    self.n = len(self.weights)
-    self.m = len(self.weights[0])
+    self.m = len(self.weights)
+    self.n = len(self.weights[0])
     await self.drive_weights()
 
   async def check_weights(self) -> bool:

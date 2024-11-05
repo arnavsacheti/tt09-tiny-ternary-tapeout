@@ -49,20 +49,20 @@ class Vecs:
 
   def gen_vecs(self, set = False):
     self.prev = [val for val in self.vecs_out]
-    self.vecs_in.clear()
+    self.vecs_in  = [0 for i in range(self.N)]
+    self.vecs_out = [0 for i in range(self.M)]
 
     # Generate Input Vector
     for i in range(self.N): # generate the correct number of input vecs
-      self.vecs_in.append(BinaryValue(random.randint(-128, 127), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.SIGNED_MAGNITUDE))
-    self.vecs_out = [0 for i in range(self.M)]
+      self.vecs_in[i] = BinaryValue(random.randint(-128, 127), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     # Generate Output Vector
     for row in range(self.M):
       for col in range(self.N):
-        # self.vecs_out[row] = BinaryValue(self.vecs_out[row] + (self.vecs_in[col] * self.weights[row][col]), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.SIGNED_MAGNITUDE)
+        # self.vecs_out[row] = BinaryValue(self.vecs_out[row] + (self.vecs_in[col] * self.weights[row][col]), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
         self.vecs_out[row] += self.vecs_in[col] * self.weights[row][col]
         self.vecs_out[row] = ((self.vecs_out[row] + 128) % 256) - 128
-      # self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.SIGNED_MAGNITUDE)
+      self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     self.dut._log.info(f"input:  {self.vecs_in}")
     self.dut._log.info(f"output: {self.vecs_out}")

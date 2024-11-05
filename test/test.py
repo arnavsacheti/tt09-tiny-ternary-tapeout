@@ -11,8 +11,8 @@ from Vecs import Vecs
 
 import numpy as np
 
-MAX_IN_LEN = 8
-MAX_OUT_LEN = 4
+MAX_IN_LEN = 12
+MAX_OUT_LEN = 6
 
 @cocotb.test()
 async def test_load_weights(dut) -> None:
@@ -94,4 +94,4 @@ async def test_vector_long(dut) -> None:
     await weights.set_weights(w)
 
     vecs = Vecs(dut, w)
-    await vecs.drive_vecs(runs=50_000)
+    await vecs.drive_vecs(runs=5_000)

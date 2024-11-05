@@ -6,8 +6,8 @@
 `default_nettype none
 
 module tt_um_tiny_ternary_tapeout #(
-  parameter MAX_IN_LEN  = 8,
-  parameter MAX_OUT_LEN = 4
+  parameter MAX_IN_LEN  = 12,
+  parameter MAX_OUT_LEN = 6
 ) (
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset
@@ -35,22 +35,29 @@ module tt_um_tiny_ternary_tapeout #(
 
   // wire internal_reset;
   reg state;
-  reg [2:0] count;
+  reg [3:0] count;
 
-  wire [(WeightWidth * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] load_weights;
+  wire [(WeightWidth * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] load_weights;
 
   always @(posedge clk) begin
     if(!rst_n) begin
       state     <= LOAD;
-      count <=  3'b0;
+      count <=  'b0;
     end else begin
       count <= count + 'b1;
-      if(state == LOAD) begin
-        if(count == MAX_OUT_LEN - 1) begin
-          state <= MULT;
-          count <=  3'b0;
+      case(state)
+        LOAD: begin
+          if(count == (WeightWidth * MAX_OUT_LEN) - 1) begin
+            state <= MULT;
+            count <=  'b0;
+          end
         end
-      end
+        MULT: begin
+          if(count == BitWidth - 1) begin
+            count <=  'b0;
+          end
+        end
+      endcase
     end
   end
    
@@ -60,7 +67,7 @@ module tt_um_tiny_ternary_tapeout #(
   ) tt_um_load_inst (
     .clk        (clk),
     .ena        (!state),
-    .ui_input   (ui_input),
+    .ui_input   (ui_input[MAX_IN_LEN-1:0]),
     .uo_weights (load_weights)
   );
 
@@ -71,12 +78,16 @@ module tt_um_tiny_ternary_tapeout #(
     .WEIGHT_WDITH(WeightWidth)
   ) tt_um_mult_inst (
     .clk          (clk),
-    .ui_bit_select(count),
-    .ui_input     (ui_input[7:0]),
+    .ui_bit_select(count[2:0]),
+    .ui_input     (ui_input[MAX_IN_LEN-1:0]),
     .ui_weights   (load_weights),
-    .uo_output    (uo_out[3:0])
+    .uo_output    (uo_out[MAX_OUT_LEN-1:0])
   );
 
-  assign uo_out[7:4] = 4'b0;
+  if (MAX_OUT_LEN == 7) begin
+    assign uo_out[7] = 'b0;
+  end else if (MAX_OUT_LEN < 7) begin
+    assign uo_out[7:MAX_OUT_LEN] = 'b0;
+  end
 
 endmodule : tt_um_tiny_ternary_tapeout
