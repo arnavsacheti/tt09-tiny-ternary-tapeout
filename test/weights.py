@@ -2,6 +2,7 @@
 from ast import match_case
 import cocotb
 from cocotb.triggers import RisingEdge
+from cocotb.binary import BinaryValue, BinaryRepresentation
 
 class Weights:
   MAX_IN_LEN = 16
@@ -19,44 +20,43 @@ class Weights:
     self.n = len(self.weights)
     self.m = len(self.weights[0])
 
-  async def drive_weights(self, start = 1):
+  async def drive_weights(self):
     assert (0 < self.n <= self.MAX_IN_LEN)
     assert (0 < self.m <= self.MAX_OUT_LEN)
     out = 0
     self.dut.ui_in.value  = 0x00
     self.dut.uio_in.value = 0x00
-    # await RisingEdge(self.dut.clk)
+
+    self.dut._log.info(f"Setting weights: {self.weights}")
     rows = []
-    for i in range(self.n//2):
-      rows.append(i * 2)
-    for i in range(self.n//2):
-      rows.append(i * 2 + 1)
+
+    for row in self.weights:
+      bits = 0
+      for cell in row:
+        if (cell == 1):
+          bits = (bits << 2) | 0b01
+        elif (cell == 0):
+          bits = (bits << 2) | 0b00
+        elif (cell == -1):
+          bits = (bits << 2) | 0b11
+      rows.append(BinaryValue(bits, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED))
+
     self.dut._log.info(f"Rows: {rows}")
-    for n in rows:
-      row: list[int] = self.weights[n]
-      row_bits = 0
-      for i, val in enumerate(row):
-        msb_val, lsb_val = self.mapping[val]
-        row_bits |= (msb_val & 0b1) << (i)*2 + 1 # len(row) - 1 - 
-        row_bits |= (lsb_val & 0b1) << (i)*2     # len(row) - 1 - 
-      out = (out << (28)) | row_bits  
-      self.dut._log.info(f"Setting [row: {row}, bits: {bin(row_bits)}] {n}")
-      # self.dut._log.info(f"Pred weights {n}, vals {hex(out)}")
-      self.dut.ui_in.value  = (row_bits & 0xFF00) >> 8
-      self.dut.uio_in.value = (row_bits & 0XFF)
+
+    for row in rows[::-1]:
+      self.dut._log.info(f"Loading Row into weight: {row}")
+      self.dut.ui_in.value  = (row & 0xFF00) >> 8
+      self.dut.uio_in.value = (row & 0XFF)
       await RisingEdge(self.dut.clk)
-      # self.dut._log.info(f"Wrote [28bits: {self.dut.tt_um_t3_inst.tt_um_load_inst.input_to_sr.value}], {n}")
 
     # self.dut._log.info(f"Pred weights {hex(out)}")
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
-    
-      
-  async def set_weights(self, weights: list[list[int]], start = 0):
+  async def set_weights(self, weights: list[list[int]]):
     self.weights = weights
     self.n = len(self.weights)
     self.m = len(self.weights[0])
-    await self.drive_weights(start)
+    await self.drive_weights()
 
   async def check_weights(self) -> bool:
     # Array packed [High: Low]

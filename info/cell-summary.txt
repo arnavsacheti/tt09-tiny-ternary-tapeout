@@ -1,0 +1,46 @@
+# Cell usage
+
+| Cell Name | Description | Count |
+|-----------|-------------|-------|
+| [decap](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/decap/README.html) | Decoupling capacitance filler. |799 |
+| [fill](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/fill/README.html) | Fill cell. |289 |
+| [tapvpwrvgnd](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/tapvpwrvgnd/README.html) | Substrate and well tap cell. |225 |
+| [dfxtp](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/dfxtp/README.html) | Delay flop, single output. |85 |
+| [mux2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/mux2/README.html) | 2-input multiplexer. |82 |
+| [dlygate4sd3](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/dlygate4sd3/README.html) | Delay Buffer 4-stage 0.50um length inner stage gates. |63 |
+| [xnor2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/xnor2/README.html) | 2-input exclusive NOR. |48 |
+| [a21oi](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a21oi/README.html) | 2-input AND into first input of 2-input NOR. |48 |
+| [nand2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/nand2/README.html) | 2-input NAND. |41 |
+| [clkbuf](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/clkbuf/README.html) | Clock tree buffer. |33 |
+| [or2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/or2/README.html) | 2-input OR. |29 |
+| [buf](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/buf/README.html) | Buffer. |28 |
+| [inv](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/inv/README.html) | Inverter. |21 |
+| [conb](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/conb/README.html) | Constant value, low, high outputs. |20 |
+| [nor2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/nor2/README.html) | 2-input NOR. |19 |
+| [a21o](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a21o/README.html) | 2-input AND into first input of 2-input OR. |19 |
+| [and2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/and2/README.html) | 2-input AND. |15 |
+| [xor2](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/xor2/README.html) | 2-input exclusive OR. |15 |
+| [diode](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/diode/README.html) | Antenna tie-down diode. |14 |
+| [o21a](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o21a/README.html) | 2-input OR into first input of 2-input AND. |12 |
+| [nand3](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/nand3/README.html) | 3-input NAND. |11 |
+| [and3](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/and3/README.html) | 3-input AND. |11 |
+| [a211o](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a211o/README.html) | 2-input AND into first input of 3-input OR. |7 |
+| [o21ai](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o21ai/README.html) | 2-input OR into first input of 2-input NAND. |6 |
+| [and2b](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/and2b/README.html) | 2-input AND, first input inverted. |6 |
+| [o211ai](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o211ai/README.html) | 2-input OR into first input of 3-input NAND. |5 |
+| [a31o](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a31o/README.html) | 3-input AND into first input of 2-input OR. |2 |
+| [nand2b](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/nand2b/README.html) | 2-input NAND, first input inverted. |2 |
+| [o31a](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o31a/README.html) | 3-input OR into 2-input AND. |2 |
+| [a22o](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a22o/README.html) | 2-input AND into both inputs of 2-input OR. |2 |
+| [clkinv](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/clkinv/README.html) | Clock tree inverter. |2 |
+| [a22oi](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a22oi/README.html) | 2-input AND into both inputs of 2-input NOR. |1 |
+| [or3](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/or3/README.html) | 3-input OR. |1 |
+| [o22a](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o22a/README.html) | 2-input OR into both inputs of 2-input AND. |1 |
+| [o21bai](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o21bai/README.html) | 2-input OR into first input of 2-input NAND, 2nd iput inverted. |1 |
+| [o31ai](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/o31ai/README.html) | 3-input OR into 2-input NAND. |1 |
+| [or3b](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/or3b/README.html) | 3-input OR, first input inverted. |1 |
+| [and3b](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/and3b/README.html) | 3-input AND, first input inverted. |1 |
+| [and4](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/and4/README.html) | 4-input AND. |1 |
+| [a21bo](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/a21bo/README.html) | 2-input AND into first input of 2-input OR, 2nd input inverted. |1 |
+| [bufinv](https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/cells/bufinv/README.html) | Buffer followed by inverter. |1 |
+| | Total | 1971 |
