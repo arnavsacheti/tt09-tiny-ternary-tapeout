@@ -7,7 +7,7 @@
 
 module tt_um_tiny_ternary_tapeout #(
   parameter MAX_IN_LEN  = 12,
-  parameter MAX_OUT_LEN = 6
+  parameter MAX_OUT_LEN = 7
 ) (
     input  wire       clk,      // clock
     input  wire       rst_n,    // reset_n - low to reset

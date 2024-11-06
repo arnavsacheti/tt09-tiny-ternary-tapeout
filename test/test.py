@@ -12,7 +12,7 @@ from Vecs import Vecs
 import numpy as np
 
 MAX_IN_LEN = 12
-MAX_OUT_LEN = 6
+MAX_OUT_LEN = 7
 
 @cocotb.test()
 async def test_load_weights(dut) -> None:
