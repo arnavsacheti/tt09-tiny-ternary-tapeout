@@ -1,0 +1,5 @@
+# Routing stats
+
+| Utilisation (%) | Wire length (um) |
+|-------------|------------------|
+| 83.306 % | 43615 |
