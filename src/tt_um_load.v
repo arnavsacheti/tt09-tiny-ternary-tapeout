@@ -7,7 +7,7 @@
 
 module tt_um_load # (
   parameter MAX_IN_LEN   = 12, 
-  parameter MAX_OUT_LEN  = 6,
+  parameter MAX_OUT_LEN  = 12,
   parameter WIDTH        = 2
 )(
   input                                             clk,        // clock

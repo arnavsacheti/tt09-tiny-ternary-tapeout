@@ -12,9 +12,9 @@ from Vecs import Vecs
 import numpy as np
 
 MAX_IN_LEN = 12
-MAX_OUT_LEN = 7
+MAX_OUT_LEN = 12
 
-@cocotb.test()
+@cocotb.test(stage=0)
 async def test_load_weights(dut) -> None:
     dut._log.info("Start")
 
@@ -42,7 +42,7 @@ async def test_load_weights(dut) -> None:
 
 
 
-@cocotb.test()
+@cocotb.test(stage=1)
 async def test_vector(dut) -> None:
     dut._log.info("Start")
 
@@ -69,7 +69,7 @@ async def test_vector(dut) -> None:
     vecs = Vecs(dut, w)
     await vecs.drive_vecs()
 
-@cocotb.test()
+@cocotb.test(stage=3)
 async def test_vector_long(dut) -> None:
     dut._log.info("Start")
 
@@ -96,7 +96,7 @@ async def test_vector_long(dut) -> None:
     vecs = Vecs(dut, w)
     await vecs.drive_vecs(runs=5_000)
 
-@cocotb.test()
+@cocotb.test(stage=2)
 async def test_ones(dut) -> None:
     dut._log.info("Start")
 
@@ -122,7 +122,7 @@ async def test_ones(dut) -> None:
     vecs = Vecs(dut, w)
     await vecs.drive_vecs(runs=5_000)
     
-@cocotb.test()
+@cocotb.test(stage=2)
 async def test_neg_ones(dut) -> None:
     dut._log.info("Start")
 

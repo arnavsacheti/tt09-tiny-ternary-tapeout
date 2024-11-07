@@ -7,6 +7,10 @@ from cocotb.binary import BinaryValue, BinaryRepresentation
 import random
 
 class Vecs:  
+  MAX_IN_LEN = 12
+  MAX_OUT_LEN = 12
+  BIT_WIDTH = 16
+
   def __init__(self, dut, weights: list[list[int]]):
     self.dut = dut
     self.weights = weights
@@ -25,27 +29,27 @@ class Vecs:
       self.dut._log.info(f"Starting Run {run + 1}")
       
       # Cycle through each bit in the input vector
-      for i in range(8):
+      for i in range(self.BIT_WIDTH):
         ui_input = 0
         for n in range(self.N):
-          ui_input = BinaryValue((ui_input << 1) | ((self.vecs_in[n] >> i) & 0b1), n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+          ui_input = BinaryValue((ui_input << 1) | ((self.vecs_in[n] >> i) & 0b1), n_bits=self.MAX_IN_LEN, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
 
         self.dut._log.info(f"ui_input for bit {i}: {ui_input}")
 
-        self.dut.ui_in.value  = (ui_input & 0xFF00) >> 8  # higher 8 bits
-        self.dut.uio_in.value =  ui_input & 0x00FF        # lower 8 bits
+        self.dut.ui_in.value  = (ui_input & 0xFF0) >> 4  # higher 8 bits
+        self.dut.uio_in.value = (ui_input & 0x00F) << 4        # lower 4 bits
         await RisingEdge(self.dut.clk)
-        
+
         if uo_output is not None:
-          assert uo_output == self.dut.uo_out.value
+          assert uo_output == self.dut.uo_out.value << 4 | (self.dut.uio_out.value & 0x0F)
 
         uo_output = 0
         for m in range(self.M):
-          uo_output = BinaryValue(uo_output | (((self.vecs_out[m] >> i) & 0b1) << m), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+          uo_output = BinaryValue(uo_output | (((self.vecs_out[m] >> i) & 0b1) << m), n_bits=self.MAX_OUT_LEN, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
         self.dut._log.info(f"uo_output for bit {i}: {uo_output}")
 
     await RisingEdge(self.dut.clk)
-    assert uo_output == self.dut.uo_out.value
+    assert uo_output == self.dut.uo_out.value << 4 | (self.dut.uio_out.value & 0x0F)
 
   def gen_vecs(self, set = False):
     self.prev = [val for val in self.vecs_out]
@@ -54,19 +58,15 @@ class Vecs:
 
     # Generate Input Vector
     for i in range(self.N): # generate the correct number of input vecs
-      self.vecs_in[i] = BinaryValue(random.randint(-128, 127), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
+      self.vecs_in[i] = BinaryValue(random.randint(-32768, 32767), n_bits=self.BIT_WIDTH, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     # Generate Output Vector
     for row in range(self.M):
       for col in range(self.N):
         # self.vecs_out[row] = BinaryValue(self.vecs_out[row] + (self.vecs_in[col] * self.weights[row][col]), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
         self.vecs_out[row] += self.vecs_in[col] * self.weights[row][col]
-        self.vecs_out[row] = ((self.vecs_out[row] + 128) % 256) - 128
-      self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
+        self.vecs_out[row] = ((self.vecs_out[row] + 32768) % 65536) - 32768
+      self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=self.BIT_WIDTH, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     self.dut._log.info(f"input:  {self.vecs_in}")
     self.dut._log.info(f"output: {self.vecs_out}")
-    # for row in range(self.N):
-    #   for col in range(self.M):
-    #     self.vecs_out[col] += self.vecs_in[row] * self.weights[row][col]
-    #     self.vecs_out[col] = ((self.vecs_out[col] + 128) % 256) - 128

@@ -5,8 +5,8 @@ from cocotb.triggers import RisingEdge
 from cocotb.binary import BinaryValue, BinaryRepresentation
 
 class Weights:
-  MAX_IN_LEN = 16
-  MAX_OUT_LEN = 8
+  MAX_IN_LEN = 12
+  MAX_OUT_LEN = 12
 
   mapping = {
     1: (0, 1), 
@@ -43,8 +43,8 @@ class Weights:
         elif (cell == -1):
           msb = (msb << 1) | 0b1
           lsb = (lsb << 1) | 0b1
-      msb = BinaryValue(msb, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
-      lsb = BinaryValue(lsb, n_bits=16, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+      msb = BinaryValue(msb, n_bits=self.MAX_IN_LEN, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+      lsb = BinaryValue(lsb, n_bits=self.MAX_IN_LEN, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
       rows.append((msb, lsb))
 
     self.dut._log.info(f"Rows: {rows}")
@@ -53,12 +53,12 @@ class Weights:
       self.dut._log.info(f"Loading Row into weight: {row}")
       msb, lsb = row
 
-      self.dut.ui_in.value  = (msb & 0xFF00) >> 8
-      self.dut.uio_in.value = (msb & 0XFF)
+      self.dut.ui_in.value  = (msb & 0xFF0) >> 4
+      self.dut.uio_in.value = (msb & 0X00F) << 4
       await RisingEdge(self.dut.clk)
 
-      self.dut.ui_in.value  = (lsb & 0xFF00) >> 8
-      self.dut.uio_in.value = (lsb & 0XFF)
+      self.dut.ui_in.value  = (lsb & 0xFF0) >> 4
+      self.dut.uio_in.value = (lsb & 0X00F) << 4
       await RisingEdge(self.dut.clk)
 
     # self.dut._log.info(f"Pred weights {hex(out)}")
