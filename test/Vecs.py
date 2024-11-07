@@ -9,9 +9,8 @@ import random
 class Vecs:  
   MAX_IN_LEN = 12
   MAX_OUT_LEN = 12
-  BIT_WIDTH = 16
 
-  def __init__(self, dut, weights: list[list[int]]):
+  def __init__(self, dut, weights: list[list[int]], bit_width: int = 16):
     self.dut = dut
     self.weights = weights
 
@@ -20,6 +19,8 @@ class Vecs:
 
     self.M = len(self.weights)
     self.N = len(self.weights[0])
+    self.bit_width = bit_width
+    self.bound = int(2 ** (self.bit_width - 1))
 
   async def drive_vecs(self, runs = 1):
     uo_output = None
@@ -29,7 +30,7 @@ class Vecs:
       self.dut._log.info(f"Starting Run {run + 1}")
       
       # Cycle through each bit in the input vector
-      for i in range(self.BIT_WIDTH):
+      for i in range(self.bit_width):
         ui_input = 0
         for n in range(self.N):
           ui_input = BinaryValue((ui_input << 1) | ((self.vecs_in[n] >> i) & 0b1), n_bits=self.MAX_IN_LEN, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
@@ -58,15 +59,15 @@ class Vecs:
 
     # Generate Input Vector
     for i in range(self.N): # generate the correct number of input vecs
-      self.vecs_in[i] = BinaryValue(random.randint(-32768, 32767), n_bits=self.BIT_WIDTH, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
+      self.vecs_in[i] = BinaryValue(random.randint(-self.bound, self.bound - 1), n_bits=self.bit_width, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     # Generate Output Vector
     for row in range(self.M):
       for col in range(self.N):
         # self.vecs_out[row] = BinaryValue(self.vecs_out[row] + (self.vecs_in[col] * self.weights[row][col]), n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
         self.vecs_out[row] += self.vecs_in[col] * self.weights[row][col]
-        self.vecs_out[row] = ((self.vecs_out[row] + 32768) % 65536) - 32768
-      self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=self.BIT_WIDTH, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
+        self.vecs_out[row] = ((self.vecs_out[row] + self.bound) % (2*self.bound)) - self.bound
+      self.vecs_out[row] = BinaryValue(self.vecs_out[row], n_bits=self.bit_width, bigEndian=False, binaryRepresentation=BinaryRepresentation.TWOS_COMPLEMENT)
 
     self.dut._log.info(f"input:  {self.vecs_in}")
     self.dut._log.info(f"output: {self.vecs_out}")

@@ -14,18 +14,20 @@ class Weights:
     -1: (1, 1)
   }
   
-  def __init__(self, dut, weights: list[list[int]] | None =None):
+  def __init__(self, dut, weights: list[list[int]] | None =None, bit_width: int = 16):
     self.dut = dut
     self.weights: list[list[int]] = weights if weights else [[]]
     self.m = len(self.weights)
     self.n = len(self.weights[0])
+    self.bit_width = bit_width
 
   async def drive_weights(self):
     assert (0 < self.n <= self.MAX_IN_LEN)
     assert (0 < self.m <= self.MAX_OUT_LEN)
-    out = 0
-    self.dut.ui_in.value  = 0x00
-    self.dut.uio_in.value = 0x00
+
+    self.dut.ui_in.value  = BinaryValue(self.bit_width-1, n_bits=8, bigEndian=False, binaryRepresentation=BinaryRepresentation.UNSIGNED)
+    self.dut.uio_in.value = 0x0
+    await RisingEdge(self.dut.clk)
 
     self.dut._log.info(f"Setting weights: {self.weights}")
     rows = []
@@ -61,7 +63,6 @@ class Weights:
       self.dut.uio_in.value = (lsb & 0X00F) << 4
       await RisingEdge(self.dut.clk)
 
-    # self.dut._log.info(f"Pred weights {hex(out)}")
     self.dut.ui_in.value  = 0
     self.dut.uio_in.value = 0
 

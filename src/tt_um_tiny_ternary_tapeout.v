@@ -18,7 +18,6 @@ module tt_um_tiny_ternary_tapeout #(
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe    // IOs: Enable path (active high: 0=input, 1=output)
 );
-  localparam BitWidth = 16;
   localparam WeightWidth = 2;
 
   // Assign Bi-Directional pin to input
@@ -31,26 +30,38 @@ module tt_um_tiny_ternary_tapeout #(
   wire [11:0] ui_input = {ui_in, uio_in[7:4]};
   wire [11:0] uo_output;
 
+
+  reg [7:0] bit_select;
+
+  reg load_ena;
   reg mult_ena;
-  reg [4:0] count;
+  reg [7:0] count;
 
   wire [(WeightWidth * MAX_IN_LEN * MAX_OUT_LEN) - 1:0] load_weights;
 
   always @(posedge clk) begin
     if(!rst_n) begin
+      load_ena <= 1'b0;
       mult_ena <= 1'b0;
       count   <=  'b0;
     end else begin
       count <= count + 'b1;
-      if(!mult_ena) begin
+      if(load_ena) begin
         if(count == (WeightWidth * MAX_OUT_LEN) - 1) begin
+          load_ena <= 1'b0;
           mult_ena <= 1'b1;
           count <=  'b0;
         end
-      end else begin
-        if(count == BitWidth - 1) begin
+      end else if (mult_ena) begin
+        if(count == bit_select) begin
           count <=  'b0;
         end
+      end else begin
+        if(|ui_input) begin
+          bit_select <= ui_input[11:4];
+          load_ena <= 1'b1;
+        end
+        count <=  'b0;
       end
     end
   end
@@ -61,7 +72,7 @@ module tt_um_tiny_ternary_tapeout #(
     .WIDTH      (WeightWidth)
   ) tt_um_load_inst (
     .clk        (clk),
-    .ena        (!mult_ena),
+    .ena        (load_ena),
     .ui_input   (ui_input),
     .uo_weights (load_weights)
   );
