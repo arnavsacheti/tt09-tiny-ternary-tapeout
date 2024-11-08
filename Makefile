@@ -11,7 +11,7 @@ debug:
 	$(TOOL) --debug --create-user-config $(FLOW)
 	$(TOOL) --debug --harden $(FLOW)
 
-gds: src/*.v
+gds: clean
 	$(TOOL) --create-user-config $(FLOW)
 	$(TOOL) --harden $(FLOW)
 
@@ -19,11 +19,11 @@ gl: gds
 	cp $(FINAL_DIR)/pnl/*.v $(TEST_DIR)/gate_level_netlist.v
 	cd $(TEST_DIR); make clean; GATES=yes make; cd ..
 
-info:
+info: gds
 	mkdir -p $(INFO_DIR)
 	$(TOOL) --print-stats $(FLOW) > $(INFO_DIR)/stats.txt
 	$(TOOL) --print-cell-summary $(FLOW) > $(INFO_DIR)/cell-summary.txt
 	$(TOOL) --print-cell-category $(FLOW) > $(INFO_DIR)/cell-category.txt
 
-clean: runs/*
+clean:
 	rm -rf runs $(INFO_DIR) src/config_merged.json src/user_config.json

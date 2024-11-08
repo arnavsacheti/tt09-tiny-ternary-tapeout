@@ -5,68 +5,47 @@
  
 
 module tt_um_mult # (
-   parameter MAX_IN_LEN = 12, 
-   parameter MAX_OUT_LEN = 6, 
-   parameter BIT_WIDTH = 8,
-   parameter WEIGHT_WDITH = 2
+   parameter InLen = 10, 
+   parameter OutLen = 5, 
+   parameter BitWidth = 8
 )(
-   input wire			                                          clk,
-   input wire [2:0]                                            ui_bit_select,
-   input wire [MAX_IN_LEN-1:0]                                 ui_input, 
-   input wire [(WEIGHT_WDITH * MAX_IN_LEN * MAX_OUT_LEN)-1: 0] ui_weights,
-   output wire [MAX_OUT_LEN-1:0]                               uo_output
+   input wire			     clk,
+   input wire [2:0]       row,
+   input wire [BitWidth*2-1:0]      VecIn, 
+   input wire [(2 * InLen)-1: 0] W,
+   output wire [BitWidth-1:0] VecOut
 );
 
-   reg  [3:0]  carry [MAX_OUT_LEN];
-   wire [3:0]  carry_q [MAX_OUT_LEN];
-   reg         out [MAX_OUT_LEN];
-   wire        out_q [MAX_OUT_LEN];
+   reg [BitWidth*OutLen-1:0]             temp_out;
+   reg [BitWidth*OutLen-1:0]             pipe_out;
+   wire [OutLen*BitWidth-1:0] temp_out_comb;
 
-   wire [MAX_IN_LEN*2-1:0] row_data[MAX_OUT_LEN];
-   wire [3:0] lsb_offset [MAX_OUT_LEN];
-   integer  idx;
+   wire [2*OutLen-1:0] row_data1 = W[0+: 2*OutLen]; // wire to hold the 0th row
+   wire [2*OutLen-1:0] row_data2 = W[InLen+: 2*OutLen]; // wire to hold the 1st row - reduces usage to 73% (not all latches synth)
 
-   genvar row;
+
+   genvar col;
    generate
-      for (row = 0; row < MAX_OUT_LEN; row ++) begin
-         assign row_data[row] = ui_weights[row * MAX_IN_LEN * WEIGHT_WDITH +: MAX_IN_LEN * WEIGHT_WDITH];
-
-         assign lsb_offset[row] = {3'b00, row_data[row][23]} 
-                                + {3'b00, row_data[row][22]} 
-                                + {3'b00, row_data[row][21]} 
-                                + {3'b00, row_data[row][20]} 
-                                + {3'b00, row_data[row][19]} 
-                                + {3'b00, row_data[row][18]} 
-                                + {3'b00, row_data[row][17]} 
-                                + {3'b00, row_data[row][16]} 
-                                + {3'b00, row_data[row][15]} 
-                                + {3'b00, row_data[row][14]} 
-                                + {3'b00, row_data[row][13]} 
-                                + {3'b00, row_data[row][12]};
-
-         assign {carry_q[row], out_q[row]} = (row_data[row][23]? {4'b0, ~ui_input[11]} : (row_data[row][11]? {4'b0, ui_input[11]} : 'b0))
-                                           + (row_data[row][22]? {4'b0, ~ui_input[10]} : (row_data[row][10]? {4'b0, ui_input[10]} : 'b0))
-                                           + (row_data[row][21]? {4'b0, ~ui_input[ 9]} : (row_data[row][ 9]? {4'b0, ui_input[ 9]} : 'b0))
-                                           + (row_data[row][20]? {4'b0, ~ui_input[ 8]} : (row_data[row][ 8]? {4'b0, ui_input[ 8]} : 'b0))
-                                           + (row_data[row][19]? {4'b0, ~ui_input[ 7]} : (row_data[row][ 7]? {4'b0, ui_input[ 7]} : 'b0))
-                                           + (row_data[row][18]? {4'b0, ~ui_input[ 6]} : (row_data[row][ 6]? {4'b0, ui_input[ 6]} : 'b0))
-                                           + (row_data[row][17]? {4'b0, ~ui_input[ 5]} : (row_data[row][ 5]? {4'b0, ui_input[ 5]} : 'b0))
-                                           + (row_data[row][16]? {4'b0, ~ui_input[ 4]} : (row_data[row][ 4]? {4'b0, ui_input[ 4]} : 'b0))
-                                           + (row_data[row][15]? {4'b0, ~ui_input[ 3]} : (row_data[row][ 3]? {4'b0, ui_input[ 3]} : 'b0))
-                                           + (row_data[row][14]? {4'b0, ~ui_input[ 2]} : (row_data[row][ 2]? {4'b0, ui_input[ 2]} : 'b0))
-                                           + (row_data[row][13]? {4'b0, ~ui_input[ 1]} : (row_data[row][ 1]? {4'b0, ui_input[ 1]} : 'b0))
-                                           + (row_data[row][12]? {4'b0, ~ui_input[ 0]} : (row_data[row][ 0]? {4'b0, ui_input[ 0]} : 'b0))
-                                           + (ui_bit_select == 0? {1'b0, lsb_offset[row]}: {1'b0, carry[row]});
-
-         assign uo_output[row] = out[row];
+      for (col = 0; col < OutLen*2; col = col + 2) begin
+         assign temp_out_comb[(col<<2)+:BitWidth] = 
+               (row_data1[(col)+:2] == 2'b11 ? (-$signed(VecIn[0+:BitWidth])) :
+               row_data1[(col)+:2] == 2'b01 ? $signed(VecIn[0+:BitWidth]) : {BitWidth{1'b0}}) +
+               (row_data2[(col)+:2] == 2'b11 ? (-$signed(VecIn[BitWidth+:BitWidth])) :
+               row_data2[(col)+:2] == 2'b01 ? $signed(VecIn[BitWidth+:BitWidth]) : {BitWidth{1'b0}}) +
+               (row[2:0] == 3'b0 ? {BitWidth{1'b0}} : $signed(temp_out[(col<<2)+:BitWidth]));
       end
    endgenerate
 
-   always @(posedge clk ) begin
-      for (idx = 0; idx < MAX_OUT_LEN; idx++) begin
-         carry[idx] <= carry_q[idx];
-         out[idx]   <= out_q[idx];
+   always @(posedge clk) begin
+      // Logic for computing the temporary sums (before piping into registers)
+      temp_out <= temp_out_comb;
+      if(row[2:0] == 3'b000) begin
+         pipe_out <= temp_out;
+      end else begin
+         pipe_out <= pipe_out >> BitWidth; 
       end
    end
+
+   assign VecOut = pipe_out[0+:BitWidth];
 
 endmodule
